@@ -36,9 +36,9 @@ WORKDIR /app
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
-
-# Use non-root user for security
 USER nodejs
+
+COPY --from=installer /app .
 
 # Set environment variables
 ENV NODE_ENV=production
