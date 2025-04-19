@@ -13,10 +13,9 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@auxbot/eslint-config": "workspace:*",
+    "@auxbot/typescript-config": "workspace:*",
     "@types/node": "^20.11.0",
-    "@types/node-cron": "^3.0.11",
     "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "typescript": "^5.8.2"
