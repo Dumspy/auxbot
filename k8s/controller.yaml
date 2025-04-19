@@ -18,7 +18,7 @@ spec:
       serviceAccountName: controller-service-account
       containers:
       - name: controller
-        image: auxbot-controller:latest
+        image: ghcr.io/dumspy/auxbot-controller:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
@@ -28,7 +28,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: WORKER_IMAGE
-          value: "auxbot-worker:latest"
+          value: "ghcr.io/dumspy/auxbot-worker:latest"
         resources:
           limits:
             cpu: 500m

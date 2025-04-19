@@ -10,7 +10,7 @@ app.use(express.json());
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+const k8sApi = kc.makeApiClient(k8s.BatchV1Api);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Auxbot Controller API is running' });
@@ -22,7 +22,8 @@ app.post('/spawn-worker', async (req, res) => {
         const namespace = process.env.K8S_NAMESPACE || 'default';
         const jobName = `auxbot-worker-${Date.now()}`;
 
-        const jobBody: k8s.V1Pod = {
+        const jobBody: k8s.V1Job = {
+            apiVersion: 'batch/v1',
             kind: 'Job',
             metadata: {
                 name: jobName,
@@ -31,17 +32,27 @@ app.post('/spawn-worker', async (req, res) => {
                 },
             },
             spec: {
-                containers: [{
-                    name: 'worker',
-                    image: process.env.WORKER_IMAGE || 'auxbot-worker:latest',
-                    imagePullPolicy: 'IfNotPresent'
-                }],
-                restartPolicy: 'Never'
+                template: {
+                    metadata: {
+                        labels: {
+                            app: 'auxbot-worker',
+                        },
+                    },
+                    spec: {
+                        containers: [{
+                            name: 'worker',
+                            image: process.env.WORKER_IMAGE || 'ghcr.io/dumspy/auxbot-worker:latest',
+                            imagePullPolicy: 'IfNotPresent'
+                        }],
+                        restartPolicy: 'Never'
+                    }
+                },
+                ttlSecondsAfterFinished: 100
             }
         }
 
-        const response = await k8sApi.createNamespacedPod({
-            namespace: namespace,
+        const response = await k8sApi.createNamespacedJob({
+            namespace,
             body: jobBody
         });
 
