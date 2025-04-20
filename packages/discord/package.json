@@ -1,0 +1,24 @@
+{
+    "name": "@auxbot/discord",
+    "type": "module",
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json"
+    },
+    "exports": {
+        "./interaction": {
+            "types": "./src/interaction.ts",
+            "default": "./dist/interaction.js"
+        }
+    },
+    "dependencies": {
+        "discord.js": "^14.18.0"
+    },
+    "devDependencies": {
+        "@auxbot/eslint-config": "workspace:*",
+        "@auxbot/typescript-config": "workspace:*",
+        "@types/node": "^20.11.0",
+        "eslint": "^9.24.0",
+        "tsx": "^4.7.0",
+        "typescript": "^5.8.2"
+    }
+}

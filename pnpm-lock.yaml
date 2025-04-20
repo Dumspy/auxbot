@@ -20,15 +20,24 @@ importers:
 
   apps/controller:
     dependencies:
+      '@auxbot/discord':
+        specifier: workspace:*
+        version: link:../../packages/discord
       '@kubernetes/client-node':
         specifier: ^1.1.2
         version: 1.1.2
+      '@t3-oss/env-core':
+        specifier: ^0.12.0
+        version: 0.12.0(typescript@5.8.2)(zod@3.24.3)
       discord.js:
         specifier: ^14.18.0
         version: 14.18.0
       express:
         specifier: ^4.18.2
         version: 4.21.2
+      zod:
+        specifier: ^3.24.3
+        version: 3.24.3
     devDependencies:
       '@auxbot/eslint-config':
         specifier: workspace:*
@@ -79,6 +88,31 @@ importers:
       '@auxbot/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.17.30
+      eslint:
+        specifier: ^9.24.0
+        version: 9.24.0
+      tsx:
+        specifier: ^4.7.0
+        version: 4.19.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+
+  packages/discord:
+    dependencies:
+      discord.js:
+        specifier: ^14.18.0
+        version: 14.18.0
+    devDependencies:
+      '@auxbot/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@auxbot/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       '@types/node':
         specifier: ^20.11.0
         version: 20.17.30
