@@ -1,5 +1,6 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
-import { executeCommandHandler } from "@auxbot/discord/interaction";
+import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
+import { executeCommandHandler, getInteractions } from "@auxbot/discord/interaction";
+import { env } from "./env.js";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -17,11 +18,23 @@ function importCommands() {
     }
 }
 
+function registerCommands() {
+    const interactions = getInteractions();
+    const commands = interactions.map(interaction => interaction.data.toJSON());
+
+    const rest = new REST().setToken(env.DISCORD_TOKEN);
+    rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), {
+        body: commands,
+    })
+        .then(() => console.log('Successfully registered application commands.'))
+        .catch(console.error);
+}
+
 export function initClient() {
     return new Promise<void>((resolve, reject) => {
         const InitializeTimeout = setTimeout(() => {
             reject(new Error("Discord client initialization timed out"));
-        }, 10000); // 10 seconds timeout
+        }, 30000); // 30 seconds timeout
 
 
         client.login(process.env.DISCORD_TOKEN).catch(reject)
@@ -30,6 +43,7 @@ export function initClient() {
             clearTimeout(InitializeTimeout);
 
             importCommands();
+            registerCommands();
 
             resolve();
         });

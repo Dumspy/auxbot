@@ -12,18 +12,6 @@ kc.loadFromDefault();
 
 const k8sApi = kc.makeApiClient(k8s.BatchV1Api);
 
-// Register the join command
-const commands = [
-    new SlashCommandBuilder()
-        .setName('join')
-        .setDescription('Join a voice channel')
-        .addChannelOption(option => 
-            option.setName('channel')
-                .setDescription('The voice channel to join')
-                .setRequired(true)
-        ).toJSON()
-];
-
 // Function to spawn a worker pod with guild and channel info
 async function spawnWorkerPod(guildId: string, channelId: string): Promise<string> {
     const workerJob = await k8sApi.createNamespacedJob({
