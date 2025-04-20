@@ -9,7 +9,7 @@ const client = new Client({
 
 function importCommands() {
     const commandsPath = path.join(import.meta.dirname, 'commands');
-    const commandsFolder = fs.readdirSync(commandsPath);
+    const commandsFolder = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandsFolder) {
         const filePath = path.join(commandsPath, file);
