@@ -2,7 +2,7 @@
     "name": "@auxbot/discord",
     "type": "module",
     "scripts": {
-        "build": "tsc -p tsconfig.build.json"
+        "build": "tsc"
     },
     "exports": {
         "./interaction": {
