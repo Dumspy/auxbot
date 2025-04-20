@@ -33,8 +33,11 @@ RUN pnpm turbo build --filter=@auxbot/worker...
 FROM base AS runner
 WORKDIR /app
 
-RUN wget -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O ~/.local/bin/yt-dlp
-RUN chmod a+rx ~/.local/bin/yt-dlp
+# Install yt-dlp properly
+# wget is already installed in the container
+RUN mkdir -p /usr/local/bin
+RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+RUN chmod a+rx /usr/local/bin/yt-dlp
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
@@ -45,5 +48,6 @@ COPY --from=installer /app .
 
 # Set environment variables
 ENV NODE_ENV=production
+ENV PATH="/usr/local/bin:$PATH"
 
 CMD ["node", "apps/worker/dist/index.js"]
