@@ -8,7 +8,7 @@ const client = new Client({
 });
 
 function importCommands() {
-    const commandsPath = path.join(__dirname, 'commands');
+    const commandsPath = path.join(import.meta.dirname, 'commands');
     const commandsFolder = fs.readdirSync(commandsPath);
 
     for (const file of commandsFolder) {
