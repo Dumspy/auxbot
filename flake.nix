@@ -22,6 +22,10 @@
               nodePackages.typescript
               nodePackages.typescript-language-server
               nodePackages.pnpm
+              
+              # Dependencies for @discordjs/opus
+              python3
+              ffmpeg
             ];
           };
         };

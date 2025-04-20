@@ -1,3 +1,43 @@
-console.log('Worker starting...');
-console.log('ran');
-console.log('Worker completed');
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { env } from './env.js';
+import ytdl from 'ytdl-core';
+import { createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, NoSubscriberBehavior, VoiceConnectionStatus } from '@discordjs/voice';
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates
+    ]
+});
+
+client.once('ready', async () => {
+    console.log('Worker is ready');
+    
+    try {
+        // Get the guild and join the voice channel using env vars
+        const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID);
+        if (!guild) {
+            console.error(`Guild ${env.DISCORD_GUILD_ID} not found!`);
+            return;
+        }
+        
+        const channelId = env.DISCORD_CHANNEL_ID;
+        console.log(`Attempting to join voice channel: ${channelId} in guild: ${guild.name}`);
+        
+        const connection = joinVoiceChannel({
+            channelId: channelId,
+            guildId: guild.id,
+            adapterCreator: guild.voiceAdapterCreator,
+        });
+
+        await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
+
+        console.log(`Successfully joined voice channel`);
+    } catch (error) {
+        console.error('Error joining voice channel:', error);
+    }
+});
+
+client.login(env.DISCORD_TOKEN).catch(error => {
+    console.error('Failed to login to Discord:', error);
+});

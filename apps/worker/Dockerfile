@@ -19,6 +19,8 @@ RUN turbo prune @auxbot/worker --docker
 FROM base AS installer
 RUN apk update
 RUN apk add --no-cache libc6-compat
+# Add dependencies required for @discordjs/opus
+RUN apk add --no-cache python3 ffmpeg
 WORKDIR /app
 
 # First install dependencies (as they change less often)
@@ -32,6 +34,9 @@ RUN pnpm turbo build --filter=@auxbot/worker...
 # Production image
 FROM base AS runner
 WORKDIR /app
+
+# Add runtime dependencies for @discordjs/opus
+RUN apk add --no-cache ffmpeg
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
