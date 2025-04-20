@@ -8,17 +8,20 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds]
 });
 
-function importCommands() {
+async function importCommands() {
     const commandsPath = path.join(import.meta.dirname, 'commands');
     const commandsFolder = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandsFolder) {
         console.log(`Importing command: ${file}`);
         const filePath = path.join(commandsPath, file);
-        import(filePath)
+        
+        await import(filePath)
             .then(() => console.log(`Successfully imported command: ${file}`))
             .catch(err => console.error(`Error importing command ${file}:`, err));
     }
+    
+    console.log('All commands imported');
 }
 
 async function registerCommands() {
@@ -52,7 +55,7 @@ export function initClient() {
             console.log(`Logged in as ${client.user?.tag}`);
             clearTimeout(InitializeTimeout);
 
-            importCommands();
+            await importCommands(); // Wait for command imports to complete
             await registerCommands();
 
             resolve();
