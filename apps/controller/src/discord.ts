@@ -13,8 +13,11 @@ function importCommands() {
     const commandsFolder = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandsFolder) {
+        console.log(`Importing command: ${file}`);
         const filePath = path.join(commandsPath, file);
         import(filePath)
+            .then(() => console.log(`Successfully imported command: ${file}`))
+            .catch(err => console.error(`Error importing command ${file}:`, err));
     }
 }
 
