@@ -111,7 +111,7 @@ async function spawnWorkerPod(guildId: string, channelId: string): Promise<strin
                     containers: [{
                         name: 'worker',
                         image: process.env.WORKER_IMAGE || 'ghcr.io/dumspy/auxbot-worker:latest',
-                        imagePullPolicy: 'IfNotPresent',
+                        imagePullPolicy: 'Always',
                         env: [
                             {
                                 name: 'DISCORD_TOKEN',
