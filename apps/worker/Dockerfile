@@ -1,5 +1,9 @@
 FROM node:22-alpine AS base
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
 # Set up for Turborepo
 FROM base AS builder
 # Add libc6-compat for alpine compatibility
@@ -7,7 +11,7 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 # Set working directory
 WORKDIR /app
-RUN npm install -g turbo
+RUN pnpm install -g turbo
 COPY . .
 RUN turbo prune @auxbot/worker --docker
 
@@ -19,7 +23,6 @@ WORKDIR /app
 
 # First install dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
-RUN npm install -g pnpm
 RUN pnpm install
 
 # Build the project and its dependencies
@@ -35,11 +38,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 USER nodejs
 
-# Copy built files and runtime dependencies
-COPY --from=installer /app/apps/worker/dist ./dist
-COPY --from=installer /app/apps/worker/package.json .
+COPY --from=installer /app .
 
 # Set environment variables
 ENV NODE_ENV=production
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "apps/worker/dist/index.js"]
