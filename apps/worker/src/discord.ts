@@ -20,7 +20,14 @@ function importCommands() {
 
 function registerCommands() {
     const interactions = getInteractions();
+    console.log('Registering commands:', interactions.map(interaction => interaction.data.name));
+    if (interactions.length === 0) {
+        console.log('No commands to register');
+        return;
+    }
+
     const commands = interactions.map(interaction => interaction.data.toJSON());
+    console.log('Commands:', commands);
 
     const rest = new REST().setToken(env.DISCORD_TOKEN);
     rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), {

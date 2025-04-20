@@ -20,7 +20,8 @@ export function getInteraction(name: string): AuxInteraction | undefined {
 
 export async function executeCommandHandler(interaction: Interaction): Promise<void> {
     if (!interaction.isChatInputCommand()) {
-        return Promise.reject('Not a chat input command');
+        console.log('Received a non-chat input command interaction, ignoring');
+        return;
     }
 
     const command = getInteraction(interaction.commandName);
