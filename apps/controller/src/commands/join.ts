@@ -1,5 +1,6 @@
 import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
+import { spawnWorkerPod } from '../k8s.js'
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -26,8 +27,7 @@ registerInteraction({
                 return
             }
             // Spawn worker pod with guild and channel info
-            //const jobName = await spawnWorkerPod(guildId, channel.id)
-            const jobName = 'test-job' // Placeholder for the actual job name
+            const jobName = await spawnWorkerPod(guildId, channel.id)
             await interaction.editReply(`Joining voice channel! Worker pod "${jobName}" spawned.`)
         } catch (error: any) {
             console.error('Error handling join command:', error)

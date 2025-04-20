@@ -63,6 +63,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@auxbot/discord':
+        specifier: workspace:*
+        version: link:../../packages/discord
       '@discordjs/opus':
         specifier: ^0.10.0
         version: 0.10.0

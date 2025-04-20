@@ -1,14 +1,10 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { env } from './env.js';
 import ytdl from 'ytdl-core';
 import { createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, NoSubscriberBehavior, VoiceConnectionStatus } from '@discordjs/voice';
+import { initClient, getClient } from './discord.js';
 
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates
-    ]
-});
+
+const client = getClient();
 
 client.once('ready', async () => {
     console.log('Worker is ready');
@@ -38,6 +34,9 @@ client.once('ready', async () => {
     }
 });
 
-client.login(env.DISCORD_TOKEN).catch(error => {
-    console.error('Failed to login to Discord:', error);
-});
+async function boot(){
+    await initClient();
+    console.log('Discord client initialized');
+}
+
+boot()

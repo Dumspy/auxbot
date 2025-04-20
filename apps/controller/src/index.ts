@@ -1,29 +1,6 @@
-import express from 'express';
-import * as k8s from '@kubernetes/client-node';
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
-import { env } from './env.js';
-import { createWorkerJob } from './jobs/worker.js';
 import { initApp } from './express.js';
 import { initClient } from './discord.js';
-
-// Initialize Kubernetes client
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
-
-const k8sApi = kc.makeApiClient(k8s.BatchV1Api);
-
-// Function to spawn a worker pod with guild and channel info
-async function spawnWorkerPod(guildId: string, channelId: string): Promise<string> {
-    const workerJob = await k8sApi.createNamespacedJob({
-        namespace: env.K8S_NAMESPACE,
-        body: createWorkerJob(guildId, channelId)
-    });
-
-    const jobName = workerJob.metadata?.name || 'unknown';
-    console.log(`Worker job created: ${jobName} for guild: ${guildId}, channel: ${channelId}`);
-
-    return jobName;
-}
+import './k8s.js'
 
 async function boot() {
     await initApp();
