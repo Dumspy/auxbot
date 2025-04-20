@@ -18,12 +18,12 @@ function importCommands() {
     }
 }
 
-function registerCommands() {
+async function registerCommands() {
     const interactions = getInteractions();
     const commands = interactions.map(interaction => interaction.data.toJSON());
 
     const rest = new REST().setToken(env.DISCORD_TOKEN);
-    rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), {
+    await rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), {
         body: commands,
     })
         .then(() => console.log('Successfully registered application commands.'))
@@ -38,12 +38,12 @@ export function initClient() {
 
 
         client.login(process.env.DISCORD_TOKEN).catch(reject)
-        client.once(Events.ClientReady, () => {
+        client.once(Events.ClientReady, async () => {
             console.log(`Logged in as ${client.user?.tag}`);
             clearTimeout(InitializeTimeout);
 
             importCommands();
-            registerCommands();
+            await registerCommands();
 
             resolve();
         });
