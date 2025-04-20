@@ -19,8 +19,6 @@ RUN turbo prune @auxbot/worker --docker
 FROM base AS installer
 RUN apk update
 RUN apk add --no-cache libc6-compat
-# Add dependencies required for @discordjs/opus
-RUN apk add --no-cache python3 ffmpeg
 WORKDIR /app
 
 # First install dependencies (as they change less often)
@@ -35,8 +33,8 @@ RUN pnpm turbo build --filter=@auxbot/worker...
 FROM base AS runner
 WORKDIR /app
 
-# Add runtime dependencies for @discordjs/opus
-RUN apk add --no-cache ffmpeg
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ~/.local/bin/yt-dlp
+RUN chmod a+rx ~/.local/bin/yt-dlp
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs

@@ -1,6 +1,5 @@
 import { env } from './env.js';
-import ytdl from 'ytdl-core';
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, NoSubscriberBehavior, VoiceConnectionStatus } from '@discordjs/voice';
+import { entersState, joinVoiceChannel, VoiceConnectionStatus } from '@discordjs/voice';
 import { initClient, getClient } from './discord.js';
 import { getPlayer } from './player.js';
 
