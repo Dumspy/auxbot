@@ -33,7 +33,8 @@ RUN pnpm turbo build --filter=@auxbot/worker...
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache python3
+# Install required dependencies
+RUN apk add --no-cache python3 ffmpeg
 
 # Install yt-dlp properly
 # wget is already installed in the container
