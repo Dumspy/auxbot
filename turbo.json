@@ -3,7 +3,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["generate", "^build"],
       "outputs": ["dist/**"]
     },
     "lint": {
@@ -11,6 +11,10 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "generate": {
+      "dependsOn": ["^generate"],
+      "outputs": ["src/**"]
     },
     "dev": {
       "cache": false,

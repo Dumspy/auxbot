@@ -2,10 +2,14 @@
     "name": "@auxbot/protos",
     "type": "module",
     "scripts": {
-        "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./generated health.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true"
+        "build": "tsc",
+        "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated ./*.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,importSuffix=.js"
     },
     "exports": {
-        "./health": "./generated/health.js",
+        "./health": {
+            "types": "./src/generated/health.ts",
+            "default": "./dist/generated/health.js"
+        },
         "./package.json": "./package.json"
     },
     "dependencies": {
