@@ -18,7 +18,7 @@ RUN turbo prune @auxbot/controller --docker
 # Install dependencies
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat protobuf
 WORKDIR /app
 
 # First install dependencies (as they change less often)
