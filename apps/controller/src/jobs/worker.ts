@@ -10,18 +10,18 @@ export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
         metadata: {
             name: jobName,
             labels: {
-                app: 'auxbot-worker',
-                guildId: guildId,
-                channelId: channelId
+                app: 'worker', // Changed to match what loadExistingWorkers looks for
+                'discord-guild-id': guildId, // Changed to match what loadExistingWorkers looks for
+                'discord-channel-id': channelId // Changed to match what loadExistingWorkers looks for
             },
         },
         spec: {
             template: {
                 metadata: {
                     labels: {
-                        app: 'auxbot-worker',
-                        guildId: guildId,
-                        channelId: channelId
+                        app: 'worker', // Changed to match metadata labels
+                        'discord-guild-id': guildId, // Changed to match metadata labels
+                        'discord-channel-id': channelId // Changed to match metadata labels
                     },
                 },
                 spec: {

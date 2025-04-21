@@ -115,25 +115,35 @@ class Player {
 
   /**
    * Skip the current song and play the next one in the queue
-   * @returns {boolean} Whether the skip was successful
+   * @returns Object with success status and information about the next song
    */
-  skipSong(): boolean {
+  skipSong(): { success: boolean; hasNext: boolean; message: string } {
     if (!queue.playing) {
-      console.log('Nothing is playing, cannot skip');
-      return false;
+      return {
+        success: false,
+        hasNext: false,
+        message: 'Nothing is currently playing'
+      };
     }
     
-    // Stop the current playback
+    const hasNextSong = queue.queue.length > 0;
+    
     this.player.stop();
     
-    // playNext will be called by the Idle event handler
-    return true;
+    if (hasNextSong) {
+      setTimeout(() => this.playNext(), 0);
+    } else {
+      queue.playing = false;
+      this.currentSong = null;
+    }
+    
+    return {
+      success: true,
+      hasNext: hasNextSong,
+      message: hasNextSong ? 'Skipped to next song' : 'Skipped current song, queue is now empty'
+    };
   }
 
-  /**
-   * Pause the current playback
-   * @returns {boolean} Whether the pause was successful
-   */
   pausePlayback(): boolean {
     if (this.player.state.status === AudioPlayerStatus.Playing) {
       this.player.pause();
@@ -145,10 +155,6 @@ class Player {
     }
   }
 
-  /**
-   * Resume the current playback
-   * @returns {boolean} Whether the resume was successful
-   */
   resumePlayback(): boolean {
     if (this.player.state.status === AudioPlayerStatus.Paused) {
       this.player.unpause();
@@ -160,10 +166,6 @@ class Player {
     }
   }
 
-  /**
-   * Get the current player status
-   * @returns The current player status and information
-   */
   getPlayerStatus() {
     return {
       status: this.player.state.status,
@@ -173,10 +175,6 @@ class Player {
     };
   }
 
-  /**
-   * Get the raw player instance
-   * @returns The Discord.js audio player instance
-   */
   getRawPlayer() {
     return this.player;
   }

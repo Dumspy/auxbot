@@ -23,8 +23,16 @@ export class WorkerRegistry {
     this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
     this.batchApi = kc.makeApiClient(k8s.BatchV1Api);
     
-    // Start periodic health checks
-    this.startHealthChecks();
+    // Load existing workers on startup
+    this.loadExistingWorkers().then(() => {
+      console.log('Loaded existing workers');
+      // Start periodic health checks
+      this.startHealthChecks();
+    }).catch(error => {
+      console.error('Failed to load existing workers:', error);
+      // Start periodic health checks anyway
+      this.startHealthChecks();
+    });
   }
 
   /**
@@ -163,5 +171,55 @@ export class WorkerRegistry {
    */
   getAllWorkers(): TrackedWorker[] {
     return Array.from(this.workers.values());
+  }
+
+  /**
+   * Load existing worker jobs from Kubernetes
+   */
+  private async loadExistingWorkers(): Promise<void> {
+    try {
+      // Get all jobs with the app=worker label in our namespace
+      const jobs = await this.batchApi.listNamespacedJob(
+        {
+          namespace: env.K8S_NAMESPACE,
+          labelSelector: 'app=worker'
+        }
+      );
+
+      console.log(`Found ${jobs.items.length} worker jobs in the cluster`);
+
+      // Process each job
+      for (const job of jobs.items) {
+        const jobName = job.metadata?.name;
+        if (!jobName) continue;
+
+        // Extract guild ID and channel ID from job labels or annotations
+        const guildId = job.metadata?.labels?.['discord-guild-id'] || 
+                        job.metadata?.annotations?.['discord-guild-id'];
+        const channelId = job.metadata?.labels?.['discord-channel-id'] || 
+                          job.metadata?.annotations?.['discord-channel-id'];
+
+        if (guildId && channelId) {
+          // Register this worker
+          this.workers.set(jobName, {
+            job,
+            guildId,
+            channelId,
+            healthy: false,
+            lastChecked: new Date()
+          });
+
+          console.log(`Loaded existing worker job ${jobName} for guild ${guildId}, channel ${channelId}`);
+          
+          // Try to get the pod IP right away
+          await this.updateWorkerPodIp(jobName);
+        } else {
+          console.warn(`Found worker job ${jobName} without guild ID or channel ID labels/annotations`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading existing workers:', error);
+      throw error;
+    }
   }
 }

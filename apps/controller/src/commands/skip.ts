@@ -26,7 +26,8 @@ registerInteraction({
             const response = await skipSong(workerAddress);
             
             if (response.success) {
-                await interaction.reply('Skipped to the next song!');
+                // Use the message directly from the server, which now includes whether there's a next song
+                await interaction.reply(response.message);
             } else {
                 await interaction.reply(response.message || 'Nothing is currently playing.');
             }

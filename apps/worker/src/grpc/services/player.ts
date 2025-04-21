@@ -62,12 +62,12 @@ registerService<PlayerService, PlayerServer>(
         },
         skipSong: function (call: grpc.ServerUnaryCall<SkipRequest, SkipResponse>, callback: grpc.sendUnaryData<SkipResponse>): void {
             try {
-                // Use the skipSong method from our player instance
-                const success = player.skipSong();
+                // Use the skipSong method from our player instance which now returns a more detailed response
+                const result = player.skipSong();
                 
                 callback(null, {
-                    success,
-                    message: success ? 'Skipped to next song' : 'Nothing is currently playing'
+                    success: result.success,
+                    message: result.message
                 });
             } catch (error) {
                 console.error('Error skipping song:', error);
