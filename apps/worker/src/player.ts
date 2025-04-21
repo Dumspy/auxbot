@@ -1,6 +1,10 @@
 import { AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, StreamType } from "@discordjs/voice";
 import { getQueue } from "./queue.js";
 import { spawn } from "child_process";
+import path from "path";
+import { randomUUID } from "crypto";
+import { existsSync } from "fs";
+import { unlink } from "fs/promises";
 
 const player = createAudioPlayer()
 
@@ -18,51 +22,74 @@ player.on('stateChange', (oldState, newState) => {
     console.log(`Player state changed from ${oldState.status} to ${newState.status}`);
 });
 
-async function streamYouTubeAudio(
+async function downloadAndPlayYouTubeAudio(
   url: string,
 ): Promise<AudioResource> {
+  // Generate a unique filename for the download
+  const filename = path.join(
+    process.cwd(),
+    `yt-dlp-audio-${randomUUID()}.opus`
+  );
+
   return new Promise((resolve, reject) => {
-    // Configure yt-dlp to extract and process audio with FFmpeg
+    // yt-dlp command to download and convert audio
     const ytDlp = spawn("yt-dlp", [
       "-o",
-      "-", // Output to stdout
+      filename, // Output file
       "-f",
-      "bestaudio/best", // Select best audio format
-      "--no-playlist", // Don't process playlists
-      "--quiet", // Quiet mode
-      "--extract-audio", // Extract audio
-      "--audio-format", "opus", // Convert to opus format
-      "--audio-quality", "0", // Best quality
-      "--postprocessor-args", // FFmpeg args for the postprocessor
-      "-ar 48000 -ac 2 -b:a 96k", // Sample rate, channels, bitrate
-      url, // The URL to download from
+      "bestaudio/best",
+      "--no-playlist",
+      "--quiet",
+      "--extract-audio",
+      "--audio-format",
+      "opus",
+      "--audio-quality",
+      "0",
+      "--postprocessor-args",
+      "-ar 48000 -ac 2 -b:a 96k",
+      url,
     ]);
 
-    // Handle process errors
     ytDlp.on("error", (error) => {
       reject(new Error(`yt-dlp process error: ${error.message}`));
     });
 
-    // Handle process exit
-    ytDlp.on("close", (code) => {
-      if (code !== 0 && code !== null) {
-        reject(new Error(`yt-dlp exited with code ${code}`));
-      }
-    });
-
-    // Log any stderr output for debugging
     ytDlp.stderr.on("data", (data) => {
       console.error(`yt-dlp error: ${data}`);
     });
 
-    // Create an audio resource from the yt-dlp output
-    const resource = createAudioResource(ytDlp.stdout, {
-      inputType: StreamType.Opus,
+    ytDlp.on("close", async (code) => {
+      if (code !== 0 && code !== null) {
+        reject(new Error(`yt-dlp exited with code ${code}`));
+        return;
+      }
+
+      // Check if file exists
+      if (!existsSync(filename)) {
+        reject(new Error("Audio file was not created."));
+        return;
+      }
+
+      // Create an audio resource from the file
+      const resource = createAudioResource(filename, {
+        inputType: StreamType.Opus,
+        inlineVolume: true,
+      });
+
+      // Play the audio
+      player.play(resource);
+
+      // Clean up the file after playback ends
+      resource.playStream.on("close", async () => {
+        try {
+          await unlink(filename);
+        } catch (e) {
+          console.warn(`Failed to delete temp file: ${filename}`);
+        }
+      });
+
+      resolve(resource);
     });
-
-    player.play(resource);
-
-    resolve(resource);
   });
 }
 
@@ -77,7 +104,7 @@ export async function playNext() {
     console.log(`Now playing: ${song.url}`);
 
     getQueue().playing = true;
-    await streamYouTubeAudio(song.url);
+    await downloadAndPlayYouTubeAudio(song.url);
 }
 
 export function getPlayer() {
