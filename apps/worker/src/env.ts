@@ -7,6 +7,7 @@ export const env = createEnv({
         DISCORD_CLIENT_ID: z.string(),
         DISCORD_GUILD_ID: z.string(),
         DISCORD_CHANNEL_ID: z.string(),
+        GRPC_PORT: z.string().default("50051"),
     },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,

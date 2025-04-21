@@ -8,6 +8,8 @@ export const env = createEnv({
         WORKER_IMAGE: z.string().default("ghcr.io/dumspy/auxbot-worker:latest"),
         DISCORD_TOKEN: z.string(),
         DISCORD_CLIENT_ID: z.string(),
+        WORKER_GRPC_HOST: z.string().default("localhost"),
+        WORKER_GRPC_PORT: z.string().default("50051"),
     },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,

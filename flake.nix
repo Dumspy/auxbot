@@ -26,6 +26,9 @@
               # Dependencies for @discordjs/opus
               python3
               ffmpeg
+              
+              # Dependencies for protobuf/grpc
+              protobuf
             ];
           };
         };

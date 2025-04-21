@@ -1,0 +1,24 @@
+{
+    "name": "@auxbot/protos",
+    "type": "module",
+    "scripts": {
+        "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./generated health.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true"
+    },
+    "exports": {
+        "./health": "./generated/health.js",
+        "./package.json": "./package.json"
+    },
+    "dependencies": {
+        "@grpc/grpc-js": "^1.13.3",
+        "protobufjs": "^7.5.0"
+    },
+    "devDependencies": {
+        "@auxbot/eslint-config": "workspace:*",
+        "@auxbot/typescript-config": "workspace:*",
+        "@types/node": "^20.11.0",
+        "eslint": "^9.24.0",
+        "ts-proto": "^1.167.1",
+        "tsx": "^4.7.0",
+        "typescript": "^5.8.2"
+    }
+}

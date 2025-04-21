@@ -11,6 +11,8 @@ export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
             name: jobName,
             labels: {
                 app: 'auxbot-worker',
+                guildId: guildId,
+                channelId: channelId
             },
         },
         spec: {
@@ -18,6 +20,8 @@ export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
                 metadata: {
                     labels: {
                         app: 'auxbot-worker',
+                        guildId: guildId,
+                        channelId: channelId
                     },
                 },
                 spec: {
@@ -25,6 +29,12 @@ export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
                         name: 'worker',
                         image: env.WORKER_IMAGE, 
                         imagePullPolicy: 'Always',
+                        ports: [
+                            {
+                                containerPort: 50051,
+                                name: 'grpc'
+                            }
+                        ],
                         env: [
                             {
                                 name: 'DISCORD_TOKEN',
@@ -41,6 +51,10 @@ export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
                             {
                                 name: 'DISCORD_CHANNEL_ID',
                                 value: channelId
+                            },
+                            {
+                                name: 'GRPC_PORT',
+                                value: '50051'
                             }
                         ]
                     }],
