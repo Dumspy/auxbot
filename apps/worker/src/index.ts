@@ -1,7 +1,7 @@
 import { env } from './env.js';
 import { entersState, joinVoiceChannel, VoiceConnectionStatus } from '@discordjs/voice';
 import { initClient, getClient } from './discord.js';
-import { getPlayer } from './player.js';
+import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
 
 const client = getClient();
@@ -25,8 +25,8 @@ client.once('ready', async () => {
             adapterCreator: guild.voiceAdapterCreator,
         });
 
-        const player = getPlayer()
-        connection.subscribe(player);
+        // Subscribe the connection to our player instance
+        connection.subscribe(player.getRawPlayer());
 
         await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
     } catch (error) {

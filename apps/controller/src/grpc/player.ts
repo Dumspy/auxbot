@@ -1,5 +1,14 @@
 import * as grpc from '@grpc/grpc-js';
-import { AddSongResponse, PlayerClient } from '@auxbot/protos/player';
+import { 
+    AddSongResponse, 
+    ClearQueueResponse, 
+    PauseResponse, 
+    PlayerClient, 
+    PlayerStatusResponse, 
+    QueueStatusResponse, 
+    ResumeResponse, 
+    SkipResponse 
+} from '@auxbot/protos/player';
 
 function createPlayerClient(address: string): PlayerClient {
     return new PlayerClient(
@@ -16,6 +25,132 @@ export async function addSong(address: string, url: string, requesterId: string)
         client.addSong(request, (error, response) => {
             if (error) {
                 console.error('Error adding song:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Skip the current song
+ * @param address The worker address
+ * @returns Promise with the skip response
+ */
+export async function skipSong(address: string): Promise<SkipResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.skipSong(request, (error, response) => {
+            if (error) {
+                console.error('Error skipping song:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Clear the player queue
+ * @param address The worker address
+ * @returns Promise with the clear queue response
+ */
+export async function clearQueue(address: string): Promise<ClearQueueResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.clearQueue(request, (error, response) => {
+            if (error) {
+                console.error('Error clearing queue:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Get the current queue status
+ * @param address The worker address
+ * @returns Promise with the queue status response
+ */
+export async function getQueueStatus(address: string): Promise<QueueStatusResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.getQueueStatus(request, (error, response) => {
+            if (error) {
+                console.error('Error getting queue status:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Pause the current playback
+ * @param address The worker address
+ * @returns Promise with the pause response
+ */
+export async function pausePlayback(address: string): Promise<PauseResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.pausePlayback(request, (error, response) => {
+            if (error) {
+                console.error('Error pausing playback:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Resume the current playback
+ * @param address The worker address
+ * @returns Promise with the resume response
+ */
+export async function resumePlayback(address: string): Promise<ResumeResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.resumePlayback(request, (error, response) => {
+            if (error) {
+                console.error('Error resuming playback:', error);
+                reject(error);
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
+/**
+ * Get the current player status
+ * @param address The worker address
+ * @returns Promise with the player status response
+ */
+export async function getPlayerStatus(address: string): Promise<PlayerStatusResponse> {
+    return new Promise((resolve, reject) => {
+        const client = createPlayerClient(address);
+        const request = {};
+        
+        client.getPlayerStatus(request, (error, response) => {
+            if (error) {
+                console.error('Error getting player status:', error);
                 reject(error);
                 return;
             }

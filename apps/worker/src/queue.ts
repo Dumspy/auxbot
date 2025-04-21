@@ -7,8 +7,12 @@ class Queue {
     queue: QueueItem[] = [];
     playing: boolean = false;
 
-    add(url: string, requesterId: string): void {
+    add(url: string, requesterId: string): number {
+        const queuePosition = this.queue.length;
+
         this.queue.push({ url, requesterId });
+        
+        return queuePosition;
     }
 
     pop(): QueueItem | undefined {
