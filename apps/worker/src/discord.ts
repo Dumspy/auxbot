@@ -1,5 +1,4 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import { executeCommandHandler} from "@auxbot/discord/interaction";
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
@@ -25,5 +24,3 @@ export function initClient() {
         });
     });
 }
-
-client.on(Events.InteractionCreate, executeCommandHandler)
