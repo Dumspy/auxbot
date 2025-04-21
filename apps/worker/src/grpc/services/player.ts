@@ -18,12 +18,26 @@ import {
     SkipResponse
 } from '@auxbot/protos/player';
 import { registerService } from "../index.js";
+import { queue } from '../../queue.js';
+import { playNext } from '../../player.js';
 
 registerService<PlayerService, PlayerServer>(
     PlayerService,
     {
         addSong: function (call: grpc.ServerUnaryCall<AddSongRequest, AddSongResponse>, callback: grpc.sendUnaryData<AddSongResponse>): void {
-            throw new Error("Function not implemented.");
+            const { url, requesterId } = call.request;
+
+            queue.add(url, requesterId);
+            if (!queue.playing) {
+                playNext();
+            }
+
+            callback(null, {
+                success: true,
+                message: '',
+                isPlaying: false,
+                position: 0
+            });
         },
         skipSong: function (call: grpc.ServerUnaryCall<SkipRequest, SkipResponse>, callback: grpc.sendUnaryData<SkipResponse>): void {
             throw new Error("Function not implemented.");

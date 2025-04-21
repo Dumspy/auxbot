@@ -1,10 +1,10 @@
 import { AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, StreamType } from "@discordjs/voice";
-import { getQueue } from "./queue.js";
 import { spawn } from "child_process";
 import path from "path";
 import { randomUUID } from "crypto";
 import { existsSync } from "fs";
 import { unlink } from "fs/promises";
+import { queue } from "./queue.js";
 
 const player = createAudioPlayer()
 
@@ -94,7 +94,6 @@ async function downloadAndPlayYouTubeAudio(
 }
 
 export async function playNext() {
-    const queue = getQueue();
     const song = queue.pop();
     if (!song) {
         queue.playing = false;
@@ -103,7 +102,7 @@ export async function playNext() {
     }
     console.log(`Now playing: ${song.url}`);
 
-    getQueue().playing = true;
+    queue.playing = true;
     await downloadAndPlayYouTubeAudio(song.url);
 }
 

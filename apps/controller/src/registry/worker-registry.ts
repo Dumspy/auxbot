@@ -22,7 +22,7 @@ export class WorkerRegistry {
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
     this.batchApi = kc.makeApiClient(k8s.BatchV1Api);
-
+    
     // Start periodic health checks
     this.startHealthChecks();
   }
