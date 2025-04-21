@@ -25,10 +25,10 @@ player.on('stateChange', (oldState, newState) => {
 async function downloadAndPlayYouTubeAudio(
   url: string,
 ): Promise<AudioResource> {
-  // Generate a unique filename for the download
+  // Generate a unique filename in the auxbot temp directory
   const filename = path.join(
-    process.cwd(),
-    `yt-dlp-audio-${randomUUID()}.opus`
+    "/tmp/auxbot",
+    `audio-${randomUUID()}.opus`
   );
 
   return new Promise((resolve, reject) => {

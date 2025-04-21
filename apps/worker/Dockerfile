@@ -44,6 +44,11 @@ RUN chmod a+rx /usr/local/bin/yt-dlp
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
+
+# Create a dedicated temp directory for auxbot with proper permissions
+RUN mkdir -p /tmp/auxbot
+RUN chown -R nodejs:nodejs /tmp/auxbot
+
 USER nodejs
 
 COPY --from=installer /app .
