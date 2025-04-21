@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package player;
+
+// Player service definition
+service Player {
+  // Add a song to the queue and play it if nothing is playing
+  rpc AddSong (AddSongRequest) returns (AddSongResponse);
+  
+  // Skip the current song
+  rpc SkipSong (SkipRequest) returns (SkipResponse);
+  
+  // Clear the entire queue
+  rpc ClearQueue (ClearQueueRequest) returns (ClearQueueResponse);
+  
+  // Get the current queue status
+  rpc GetQueueStatus (QueueStatusRequest) returns (QueueStatusResponse);
+  
+  // Pause the current playback
+  rpc PausePlayback (PauseRequest) returns (PauseResponse);
+  
+  // Resume the current playback
+  rpc ResumePlayback (ResumeRequest) returns (ResumeResponse);
+
+  // Get the current player status
+  rpc GetPlayerStatus (PlayerStatusRequest) returns (PlayerStatusResponse);
+}
+
+// Request to add a song to the queue
+message AddSongRequest {
+  string url = 1;
+  string requester_id = 2;
+}
+
+// Response after adding a song
+message AddSongResponse {
+  bool success = 1;
+  string message = 2;
+  bool is_playing = 3;  // Whether the song is now playing (was empty queue) or just queued
+  int32 position = 4;   // Position in queue (0 means now playing)
+}
+
+// Request to skip the current song
+message SkipRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Response after skipping
+message SkipResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to clear the queue
+message ClearQueueRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Response after clearing the queue
+message ClearQueueResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to get queue status
+message QueueStatusRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Queue item details
+message QueueItem {
+  string url = 1;
+  string requester_id = 2;
+}
+
+// Response with queue status
+message QueueStatusResponse {
+  repeated QueueItem items = 1;
+  bool is_playing = 2;
+  string now_playing_url = 3;
+  string now_playing_requester = 4;
+}
+
+// Request to pause playback
+message PauseRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Response after pausing
+message PauseResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to resume playback
+message ResumeRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Response after resuming
+message ResumeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to get player status
+message PlayerStatusRequest {
+  // No fields needed as worker knows its guild
+}
+
+// Enum for player status
+enum PlayerStatus {
+  IDLE = 0;
+  PLAYING = 1;
+  PAUSED = 2;
+  BUFFERING = 3;
+  ERROR = 4;
+}
+
+// Response with player status
+message PlayerStatusResponse {
+  PlayerStatus status = 1;
+  string current_url = 2;
+  string requester_id = 3;
+  bool has_queue = 4;
+  int32 queue_length = 5;
+}

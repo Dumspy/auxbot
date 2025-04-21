@@ -10,6 +10,10 @@
             "types": "./src/generated/health.ts",
             "default": "./dist/generated/health.js"
         },
+        "./player": {
+            "types": "./src/generated/player.ts",
+            "default": "./dist/generated/player.js"
+        },
         "./package.json": "./package.json"
     },
     "dependencies": {
