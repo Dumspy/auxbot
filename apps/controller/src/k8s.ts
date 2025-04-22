@@ -16,11 +16,16 @@ export function getK8sApi() {
 }
 
 export async function spawnWorkerPod(guildId: string, channelId: string): Promise<string> {
-    const workerJob = await k8sApi.createNamespacedJob({
-        namespace: env.K8S_NAMESPACE,
-        body: createWorkerJob(guildId, channelId)
-    });
+    // Check if a worker for this guild already exists
+    const existingWorkers = workerRegistry.getWorkersByGuild(guildId);
+    if (existingWorkers[0]) {
+        // If there's an existing worker, return its job name
+        const existingWorker = existingWorkers[0];
+        console.log(`Using existing worker for guild ${guildId}: ${existingWorker.job.metadata?.name}`);
+        return existingWorker.job.metadata?.name || 'unknown';
+    }
 
+    const workerJob = await k8sApi.createNamespacedJob({namespace: env.K8S_NAMESPACE, body: createWorkerJob(guildId, channelId)});
     const jobName = workerJob.metadata?.name || 'unknown';
     console.log(`Worker job created: ${jobName} for guild: ${guildId}, channel: ${channelId}`);
 

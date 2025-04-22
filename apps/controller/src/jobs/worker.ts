@@ -2,7 +2,7 @@ import { env } from '../env.js'
 import * as k8s from '@kubernetes/client-node';
 
 export function createWorkerJob(guildId: string, channelId: string): k8s.V1Job {
-    const jobName = `auxbot-worker-${Date.now()}`;
+    const jobName = `auxbot-worker-${guildId}`;
 
     return {
         apiVersion: 'batch/v1',
