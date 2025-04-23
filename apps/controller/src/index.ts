@@ -20,7 +20,7 @@ async function boot() {
         }
         
         workers.forEach(worker => {
-            console.log(`- Worker ${worker.job.metadata?.name} (guild: ${worker.guildId}): ${worker.healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+            console.log(`- Worker ${worker.deployment.metadata?.name} (guild: ${worker.guildId}): ${worker.healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
         });
     }, 60000);
 }
