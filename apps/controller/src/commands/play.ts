@@ -2,7 +2,6 @@ import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
 import { addSong } from '../grpc/player.js';
 import { workerRegistry } from '../k8s.js';
-import { env } from '../env.js';
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -32,10 +31,8 @@ registerInteraction({
             return;
         }
 
-        const workerAddress = worker.podIp + ':' + env.WORKER_GRPC_PORT;
-
         try {
-            const response = await addSong(workerAddress, songUrl, interaction.user.id);
+            const response = await addSong(interaction.guildId, songUrl, interaction.user.id);
             await interaction.reply(`Added song: ${response.isPlaying ? 'Playing now' : 'Added to queue'}`);
         } catch (error) {
             await interaction.reply('Failed to add song. Please try again later.');

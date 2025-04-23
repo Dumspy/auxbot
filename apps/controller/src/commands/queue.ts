@@ -2,7 +2,6 @@ import { registerInteraction } from '@auxbot/discord/interaction'
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { getQueueStatus } from '../grpc/player.js';
 import { workerRegistry } from '../k8s.js';
-import { env } from '../env.js';
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -20,10 +19,8 @@ registerInteraction({
             return;
         }
 
-        const workerAddress = worker.podIp + ':' + env.WORKER_GRPC_PORT;
-
         try {
-            const response = await getQueueStatus(workerAddress);
+            const response = await getQueueStatus(interaction.guildId);
             
             const embed = new EmbedBuilder()
                 .setTitle('Music Queue')
@@ -37,7 +34,7 @@ registerInteraction({
             } else {
                 embed.addFields({ name: '🎵 Now Playing', value: 'Nothing is currently playing' });
             }
-            
+
             if (response.items.length > 0) {
                 const queueList = response.items
                     .map((item, index) => `${index + 1}. [Link](${item.url}) | Requested by <@${item.requesterId}>`)

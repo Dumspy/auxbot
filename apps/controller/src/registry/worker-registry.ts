@@ -4,10 +4,10 @@ import { checkWorkerHealth } from '../grpc/health.js';
 
 // Interface to represent a tracked worker
 interface TrackedWorker {
-  job: k8s.V1Job;
+  deployment: k8s.V1Deployment;
+  service: k8s.V1Service;
   guildId: string;
   channelId: string;
-  podIp?: string;
   healthy: boolean;
   lastChecked: Date;
 }
@@ -15,13 +15,13 @@ interface TrackedWorker {
 export class WorkerRegistry {
   private workers: Map<string, TrackedWorker> = new Map();
   private k8sApi: k8s.CoreV1Api;
-  private batchApi: k8s.BatchV1Api;
+  private appsApi: k8s.AppsV1Api;
 
   constructor() {
     const kc = new k8s.KubeConfig();
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-    this.batchApi = kc.makeApiClient(k8s.BatchV1Api);
+    this.appsApi = kc.makeApiClient(k8s.AppsV1Api);
     
     // Load existing workers on startup
     this.loadExistingWorkers().then(() => {
@@ -38,28 +38,37 @@ export class WorkerRegistry {
   /**
    * Register a new worker
    */
-  registerWorker(job: k8s.V1Job, guildId: string, channelId: string): void {
-    const jobName = job.metadata?.name || 'unknown';
+  async registerWorker(deployment: k8s.V1Deployment, guildId: string, channelId: string): Promise<void> {
+    const deploymentName = deployment.metadata?.name || 'unknown';
 
-    this.workers.set(jobName, {
-      job,
+    // Find the associated service
+    const services = await this.k8sApi.listNamespacedService({
+      namespace: env.K8S_NAMESPACE,
+      labelSelector: `app=worker,discord-guild-id=${guildId}`
+    });
+
+    const service = services.items[0];
+    if (!service) {
+      throw new Error(`No service found for worker ${deploymentName} (guild: ${guildId})`);
+    }
+
+    this.workers.set(deploymentName, {
+      deployment,
+      service,
       guildId,
       channelId,
       healthy: false,
       lastChecked: new Date()
     });
     
-    console.log(`Registered worker job ${jobName} for guild ${guildId}, channel ${channelId}`);
-    
-    // Start tracking this worker's pod
-    this.updateWorkerPodIp(jobName);
+    console.log(`Registered worker deployment ${deploymentName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
   }
 
   /**
    * Get information about a worker
    */
-  getWorker(jobName: string): TrackedWorker | undefined {
-    return this.workers.get(jobName);
+  getWorker(deploymentName: string): TrackedWorker | undefined {
+    return this.workers.get(deploymentName);
   }
 
   /**
@@ -73,35 +82,16 @@ export class WorkerRegistry {
   /**
    * Remove a worker from tracking
    */
-  unregisterWorker(jobName: string): void {
-    this.workers.delete(jobName);
-    console.log(`Unregistered worker job ${jobName}`);
+  unregisterWorker(deploymentName: string): void {
+    this.workers.delete(deploymentName);
+    console.log(`Unregistered worker deployment ${deploymentName}`);
   }
 
   /**
-   * Update the pod IP for a worker job
+   * Get the service DNS name for a worker
    */
-  private async updateWorkerPodIp(jobName: string): Promise<void> {
-    try {
-      // Get the pod associated with this job
-      const pods = await this.k8sApi.listNamespacedPod({
-        namespace: env.K8S_NAMESPACE,
-        labelSelector: `job-name=${jobName}`,
-      });
-
-      if (pods.items.length > 0 && pods.items[0]) {
-        const podIp = pods.items[0].status?.podIP;
-        if (podIp) {
-          const worker = this.workers.get(jobName);
-          if (worker) {
-            worker.podIp = podIp;
-            console.log(`Updated pod IP for worker ${jobName}: ${podIp}`);
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`Error updating pod IP for worker ${jobName}:`, error);
-    }
+  private getWorkerServiceDns(guildId: string): string {
+    return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;
   }
 
   /**
@@ -110,56 +100,34 @@ export class WorkerRegistry {
   private startHealthChecks(): void {
     // Check all workers every 30 seconds
     setInterval(async () => {
-      for (const [jobName, worker] of this.workers.entries()) {
-        await this.checkWorkerHealth(jobName);
+      for (const [deploymentName, worker] of this.workers.entries()) {
+        await this.checkWorkerHealth(deploymentName);
       }
-      
-      // Also update pod IPs for workers that don't have them yet
-      this.updateMissingPodIps();
     }, 30000);
-  }
-
-  /**
-   * Update pod IPs for workers that don't have them yet
-   */
-  private async updateMissingPodIps(): Promise<void> {
-    for (const [jobName, worker] of this.workers.entries()) {
-      if (!worker.podIp) {
-        await this.updateWorkerPodIp(jobName);
-      }
-    }
   }
 
   /**
    * Check the health of a specific worker
    */
-  async checkWorkerHealth(jobName: string): Promise<boolean> {
-    const worker = this.workers.get(jobName);
+  async checkWorkerHealth(deploymentName: string): Promise<boolean> {
+    const worker = this.workers.get(deploymentName);
     if (!worker) {
-      console.log(`Worker ${jobName} not found for health check`);
-      return false;
-    }
-
-    // If we don't have a pod IP yet, we can't check health
-    if (!worker.podIp) {
-      console.log(`Worker ${jobName} has no pod IP, can't check health`);
-      worker.healthy = false;
-      worker.lastChecked = new Date();
+      console.log(`Worker ${deploymentName} not found for health check`);
       return false;
     }
 
     try {
-      // Use the worker's pod IP to check health via gRPC
-      const address = `${worker.podIp}:${env.WORKER_GRPC_PORT}`;
+      // Use the worker's service DNS name to check health via gRPC
+      const address = this.getWorkerServiceDns(worker.guildId);
       const isHealthy = await checkWorkerHealth(address);
       
       worker.healthy = isHealthy;
       worker.lastChecked = new Date();
       
-      console.log(`Health check for worker ${jobName}: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+      console.log(`Health check for worker ${deploymentName}: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'}`);
       return isHealthy;
     } catch (error) {
-      console.error(`Error checking health for worker ${jobName}:`, error);
+      console.error(`Error checking health for worker ${deploymentName}:`, error);
       worker.healthy = false;
       worker.lastChecked = new Date();
       return false;
@@ -174,47 +142,55 @@ export class WorkerRegistry {
   }
 
   /**
-   * Load existing worker jobs from Kubernetes
+   * Load existing worker deployments from Kubernetes
    */
   private async loadExistingWorkers(): Promise<void> {
     try {
-      // Get all jobs with the app=worker label in our namespace
-      const jobs = await this.batchApi.listNamespacedJob(
-        {
-          namespace: env.K8S_NAMESPACE,
-          labelSelector: 'app=worker'
-        }
-      );
+      // Get all deployments with the app=worker label in our namespace
+      const deployments = await this.appsApi.listNamespacedDeployment({
+        namespace: env.K8S_NAMESPACE,
+        labelSelector: 'app=worker'
+      });
 
-      console.log(`Found ${jobs.items.length} worker jobs in the cluster`);
+      console.log(`Found ${deployments.items.length} worker deployments in the cluster`);
 
-      // Process each job
-      for (const job of jobs.items) {
-        const jobName = job.metadata?.name;
-        if (!jobName) continue;
+      // Process each deployment
+      for (const deployment of deployments.items) {
+        const deploymentName = deployment.metadata?.name;
+        if (!deploymentName) continue;
 
-        // Extract guild ID and channel ID from job labels or annotations
-        const guildId = job.metadata?.labels?.['discord-guild-id'] || 
-                        job.metadata?.annotations?.['discord-guild-id'];
-        const channelId = job.metadata?.labels?.['discord-channel-id'] || 
-                          job.metadata?.annotations?.['discord-channel-id'];
+        // Extract guild ID and channel ID from deployment labels or annotations
+        const guildId = deployment.metadata?.labels?.['discord-guild-id'] || 
+                       deployment.metadata?.annotations?.['discord-guild-id'];
+        const channelId = deployment.metadata?.labels?.['discord-channel-id'] || 
+                         deployment.metadata?.annotations?.['discord-channel-id'];
 
         if (guildId && channelId) {
-          // Register this worker
-          this.workers.set(jobName, {
-            job,
+          // Find the associated service
+          const services = await this.k8sApi.listNamespacedService({
+            namespace: env.K8S_NAMESPACE,
+            labelSelector: `app=worker,discord-guild-id=${guildId}`
+          });
+
+          const service = services.items[0];
+          if (!service) {
+            console.warn(`No service found for worker ${deploymentName} (guild: ${guildId})`);
+            continue;
+          }
+
+          // Register this worker with both deployment and service
+          this.workers.set(deploymentName, {
+            deployment,
+            service,
             guildId,
             channelId,
             healthy: false,
             lastChecked: new Date()
           });
 
-          console.log(`Loaded existing worker job ${jobName} for guild ${guildId}, channel ${channelId}`);
-          
-          // Try to get the pod IP right away
-          await this.updateWorkerPodIp(jobName);
+          console.log(`Loaded existing worker deployment ${deploymentName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
         } else {
-          console.warn(`Found worker job ${jobName} without guild ID or channel ID labels/annotations`);
+          console.warn(`Found worker deployment ${deploymentName} without guild ID or channel ID labels/annotations`);
         }
       }
     } catch (error) {

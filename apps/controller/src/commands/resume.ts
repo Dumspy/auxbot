@@ -2,7 +2,6 @@ import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
 import { resumePlayback } from '../grpc/player.js';
 import { workerRegistry } from '../k8s.js';
-import { env } from '../env.js';
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -20,11 +19,8 @@ registerInteraction({
             return;
         }
 
-        const workerAddress = worker.podIp + ':' + env.WORKER_GRPC_PORT;
-
         try {
-            const response = await resumePlayback(workerAddress);
-            
+            const response = await resumePlayback(interaction.guildId);
             if (response.success) {
                 await interaction.reply('Playback resumed.');
             } else {

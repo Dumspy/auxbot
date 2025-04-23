@@ -2,7 +2,6 @@ import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
 import { skipSong } from '../grpc/player.js';
 import { workerRegistry } from '../k8s.js';
-import { env } from '../env.js';
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -20,13 +19,9 @@ registerInteraction({
             return;
         }
 
-        const workerAddress = worker.podIp + ':' + env.WORKER_GRPC_PORT;
-
         try {
-            const response = await skipSong(workerAddress);
-            
+            const response = await skipSong(interaction.guildId);
             if (response.success) {
-                // Use the message directly from the server, which now includes whether there's a next song
                 await interaction.reply(response.message);
             } else {
                 await interaction.reply(response.message || 'Nothing is currently playing.');
