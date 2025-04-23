@@ -29,16 +29,23 @@ export async function spawnWorkerPod(guildId: string, channelId: string): Promis
     // Create both service and deployment resources
     const resources = createWorkerResources(guildId, channelId);
 
-    // Create the headless service first
-    await coreV1Api.createNamespacedService({
-        namespace: env.K8S_NAMESPACE,
-        body: resources.service
-    });
-
-    // Then create the deployment
+    // Create the deployment first
     const workerDeployment = await k8sApi.createNamespacedDeployment({
         namespace: env.K8S_NAMESPACE,
         body: resources.deployment
+    });
+    
+    // Set the owner reference UID from the created deployment
+    if (resources.service.metadata?.ownerReferences?.[0] && workerDeployment.metadata?.uid) {
+        resources.service.metadata.ownerReferences[0].uid = workerDeployment.metadata.uid;
+    } else {
+        throw new Error('Failed to set owner reference: missing required metadata');
+    }
+
+    // Then create the service with the updated owner reference
+    await coreV1Api.createNamespacedService({
+        namespace: env.K8S_NAMESPACE,
+        body: resources.service
     });
     
     const deploymentName = workerDeployment.metadata?.name || 'unknown';

@@ -9,37 +9,12 @@ interface WorkerResources {
 export function createWorkerResources(guildId: string, channelId: string): WorkerResources {
     const name = 'auxbot-worker';
     
-    // Create the headless service
-    const service: k8s.V1Service = {
-        apiVersion: 'v1',
-        kind: 'Service',
-        metadata: {
-            name: `${name}-${guildId}`,  // Service name needs to be unique per guild for DNS
-            labels: {
-                app: 'worker',
-                'discord-guild-id': guildId
-            }
-        },
-        spec: {
-            clusterIP: 'None', // This makes it a headless service
-            selector: {
-                app: 'worker',
-                'discord-guild-id': guildId
-            },
-            ports: [{
-                port: 50051,
-                targetPort: 50051,
-                name: 'grpc'
-            }]
-        }
-    };
-
-    // Create the deployment with a generic name
+    // Create the deployment first since we need its metadata for owner references
     const deployment: k8s.V1Deployment = {
         apiVersion: 'apps/v1',
         kind: 'Deployment',
         metadata: {
-            name,  // Use generic name since labels identify the specific worker
+            name,
             labels: {
                 app: 'worker',
                 'discord-guild-id': guildId,
@@ -98,6 +73,39 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
                     }]
                 }
             }
+        }
+    };
+
+    // Create the headless service with owner reference to the deployment
+    const service: k8s.V1Service = {
+        apiVersion: 'v1',
+        kind: 'Service',
+        metadata: {
+            name: `${name}-${guildId}`,  // Service name needs to be unique per guild for DNS
+            labels: {
+                app: 'worker',
+                'discord-guild-id': guildId
+            },
+            ownerReferences: [{
+                apiVersion: 'apps/v1',
+                kind: 'Deployment',
+                name: deployment.metadata!.name!,
+                uid: '', // This will be filled in after deployment creation
+                controller: true,
+                blockOwnerDeletion: true
+            }]
+        },
+        spec: {
+            clusterIP: 'None', // This makes it a headless service
+            selector: {
+                app: 'worker',
+                'discord-guild-id': guildId
+            },
+            ports: [{
+                port: 50051,
+                targetPort: 50051,
+                name: 'grpc'
+            }]
         }
     };
 
