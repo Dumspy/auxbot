@@ -9,6 +9,7 @@ import { queue } from "./queue.js";
 class Player {
   private player = createAudioPlayer();
   private currentSong: { url: string, requesterId: string } | null = null;
+  private volume = 0.5; // 50% volume
 
   constructor() {
     this.player.on(AudioPlayerStatus.Idle, () => {
@@ -77,6 +78,9 @@ class Player {
           inputType: StreamType.Opus,
           inlineVolume: true,
         });
+
+        // Set the volume
+        resource.volume?.setVolume(this.volume);
 
         // Play the audio
         this.player.play(resource);
