@@ -3,7 +3,7 @@ import { WorkerLifecycleClient, WorkerLifecycleResponse } from '@auxbot/protos/w
 import { env } from '../../env.js';
 
 const client = new WorkerLifecycleClient(
-  `controller:${env.GRPC_PORT}`,
+  `auxbot-controller.${env.K8S_NAMESPACE}.svc.cluster.local:50051`,
   credentials.createInsecure()
 );
 

@@ -56,6 +56,10 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
                     {
                         name: 'INACTIVITY_TIMEOUT_MINUTES',
                         value: env.INACTIVITY_TIMEOUT_MINUTES
+                    },
+                    {
+                        name: 'K8S_NAMESPACE',
+                        value: env.K8S_NAMESPACE
                     }
                 ]
             }]
