@@ -7,6 +7,7 @@ import { unlink } from "fs/promises";
 import { queue } from "./queue.js";
 import { env } from "./env.js";
 import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
+import { getVoiceConnection } from "./index.js";
 
 class Player {
   private player = createAudioPlayer();
@@ -38,10 +39,21 @@ class Player {
   private async gracefulShutdown() {
     console.log('Performing graceful shutdown...');
     try {
-      // Perform any necessary cleanup here
+      // Stop any current playback and clear interval
       clearInterval(this.inactivityCheckInterval);
       this.player.stop();
-      // Notify controller about shutdown
+
+      // Disconnect from voice channel first
+      const connection = getVoiceConnection();
+      if (connection) {
+        console.log('Disconnecting from voice channel...');
+        connection.destroy();
+      }
+
+      // Wait a moment for the voice connection to fully close
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Now notify controller about shutdown
       await notifyShutdown('inactivity_timeout');
     } catch (error) {
       console.error('Error during shutdown:', error);
@@ -59,10 +71,6 @@ class Player {
     if (timeSinceLastActivity >= this.INACTIVITY_TIMEOUT && 
         this.player.state.status !== AudioPlayerStatus.Playing) {
       console.log('Shutting down due to inactivity');
-      clearInterval(this.inactivityCheckInterval);
-      
-      // Notify controller before shutting down
-      await notifyShutdown('inactivity_timeout');
       await this.gracefulShutdown();
     }
   }

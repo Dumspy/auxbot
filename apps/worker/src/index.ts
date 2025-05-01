@@ -1,10 +1,11 @@
 import { env } from './env.js';
-import { entersState, joinVoiceChannel, VoiceConnectionStatus } from '@discordjs/voice';
+import { entersState, joinVoiceChannel, VoiceConnectionStatus, VoiceConnection } from '@discordjs/voice';
 import { initClient, getClient } from './discord.js';
 import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
 
 const client = getClient();
+let voiceConnection: VoiceConnection | null = null;
 
 client.once('ready', async () => {
     console.log('Worker is ready');
@@ -19,20 +20,27 @@ client.once('ready', async () => {
         const channelId = env.DISCORD_CHANNEL_ID;
         console.log(`Attempting to join voice channel: ${channelId} in guild: ${guild.name}`);
         
-        const connection = joinVoiceChannel({
+        voiceConnection = joinVoiceChannel({
             channelId: channelId,
             guildId: guild.id,
             adapterCreator: guild.voiceAdapterCreator,
         });
 
         // Subscribe the connection to our player instance
-        connection.subscribe(player.getRawPlayer());
+        voiceConnection.subscribe(player.getRawPlayer());
 
-        await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
+        await entersState(voiceConnection, VoiceConnectionStatus.Ready, 30_000);
+        console.log('Successfully joined voice channel!');
+
     } catch (error) {
         console.error('Error joining voice channel:', error);
     }
 });
+
+// Export the voice connection for use in other files
+export function getVoiceConnection() {
+    return voiceConnection;
+}
 
 async function boot(){
     await initClient();
