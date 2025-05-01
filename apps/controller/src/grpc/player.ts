@@ -39,11 +39,6 @@ export async function addSong(guildId: string, url: string, requesterId: string)
     });
 }
 
-/**
- * Skip the current song
- * @param guildId The worker address
- * @returns Promise with the skip response
- */
 export async function skipSong(guildId: string): Promise<SkipResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
@@ -60,11 +55,6 @@ export async function skipSong(guildId: string): Promise<SkipResponse> {
     });
 }
 
-/**
- * Clear the player queue
- * @param guildId The worker address
- * @returns Promise with the clear queue response
- */
 export async function clearQueue(guildId: string): Promise<ClearQueueResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
@@ -81,11 +71,6 @@ export async function clearQueue(guildId: string): Promise<ClearQueueResponse> {
     });
 }
 
-/**
- * Get the current queue status
- * @param guildId The worker address
- * @returns Promise with the queue status response
- */
 export async function getQueueStatus(guildId: string): Promise<QueueStatusResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
@@ -102,11 +87,6 @@ export async function getQueueStatus(guildId: string): Promise<QueueStatusRespon
     });
 }
 
-/**
- * Pause the current playback
- * @param guildId The worker address
- * @returns Promise with the pause response
- */
 export async function pausePlayback(guildId: string): Promise<PauseResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
@@ -123,11 +103,6 @@ export async function pausePlayback(guildId: string): Promise<PauseResponse> {
     });
 }
 
-/**
- * Resume the current playback
- * @param guildId The worker address
- * @returns Promise with the resume response
- */
 export async function resumePlayback(guildId: string): Promise<ResumeResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
@@ -144,11 +119,6 @@ export async function resumePlayback(guildId: string): Promise<ResumeResponse> {
     });
 }
 
-/**
- * Get the current player status
- * @param guildId The worker address
- * @returns Promise with the player status response
- */
 export async function getPlayerStatus(guildId: string): Promise<PlayerStatusResponse> {
     return new Promise((resolve, reject) => {
         const client = createPlayerClient(guildId);
