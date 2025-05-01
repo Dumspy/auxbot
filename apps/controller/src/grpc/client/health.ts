@@ -10,12 +10,6 @@ function getWorkerServiceAddress(guildId: string): string {
     return `auxbot-worker-${guildId}.${process.env.K8S_NAMESPACE}.svc.cluster.local:50051`;
 }
 
-/**
- * Performs a health check against a worker
- * @param {string} guildId - The guild ID of the worker to check
- * @param {string} service - The name of the service to check
- * @returns {Promise<boolean>} - True if the worker is healthy
- */
 export function checkWorkerHealth(guildId: string, service: string = 'worker'): Promise<boolean> {
     return new Promise((resolve, reject) => {
         const address = getWorkerServiceAddress(guildId);

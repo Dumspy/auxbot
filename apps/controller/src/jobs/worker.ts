@@ -68,6 +68,10 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
                             {
                                 name: 'GRPC_PORT',
                                 value: '50051'
+                            },
+                            {
+                                name: 'INACTIVITY_TIMEOUT_MINUTES',
+                                value: env.INACTIVITY_TIMEOUT_MINUTES
                             }
                         ]
                     }]

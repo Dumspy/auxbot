@@ -1,6 +1,6 @@
 import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
-import { skipSong } from '../grpc/player.js';
+import { skipSong } from '../grpc/client/player.js';
 import { workerRegistry } from '../k8s.js';
 
 registerInteraction({

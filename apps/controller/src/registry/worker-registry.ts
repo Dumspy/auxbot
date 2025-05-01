@@ -1,6 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
 import { env } from '../env.js';
-import { checkWorkerHealth } from '../grpc/health.js';
+import { checkWorkerHealth } from '../grpc/client/health.js';
 
 // Interface to represent a tracked worker
 interface TrackedWorker {
@@ -195,6 +195,35 @@ export class WorkerRegistry {
       }
     } catch (error) {
       console.error('Error loading existing workers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up a worker's resources and unregister it
+   */
+  async cleanupWorker(deploymentName: string): Promise<void> {
+    const worker = this.workers.get(deploymentName);
+    if (!worker) {
+      throw new Error(`Worker ${deploymentName} not found for cleanup`);
+    }
+
+    try {
+      // Clean up the deployment and service
+      await this.appsApi.deleteNamespacedDeployment({
+        name: deploymentName,
+        namespace: env.K8S_NAMESPACE
+      });
+      await this.k8sApi.deleteNamespacedService({
+        name: `auxbot-worker-${worker.guildId}`,
+        namespace: env.K8S_NAMESPACE
+      });
+
+      // Unregister the worker
+      this.unregisterWorker(deploymentName);
+      console.log(`Cleaned up resources for worker ${deploymentName}`);
+    } catch (error) {
+      console.error(`Error cleaning up worker ${deploymentName}:`, error);
       throw error;
     }
   }

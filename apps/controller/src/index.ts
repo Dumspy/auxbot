@@ -1,6 +1,7 @@
 import { initApp } from './express.js';
 import { initClient } from './discord.js';
 import { workerRegistry } from './k8s.js';
+import { initGrpc } from './grpc/index.js';
 
 async function boot() {
     await initApp();
@@ -8,6 +9,9 @@ async function boot() {
 
     await initClient();
     console.log('Discord client initialized');
+    
+    await initGrpc();
+    console.log('gRPC server initialized');
     
     // Log worker health status every minute
     setInterval(() => {

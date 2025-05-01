@@ -1,6 +1,6 @@
 import { registerInteraction } from '@auxbot/discord/interaction'
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js'
-import { getQueueStatus } from '../grpc/player.js';
+import { getQueueStatus } from '../grpc/client/player.js';
 import { workerRegistry } from '../k8s.js';
 
 registerInteraction({

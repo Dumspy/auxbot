@@ -9,6 +9,7 @@ export const env = createEnv({
         DISCORD_TOKEN: z.string(),
         DISCORD_CLIENT_ID: z.string(),
         WORKER_GRPC_PORT: z.string().default("50051"),
+        INACTIVITY_TIMEOUT_MINUTES: z.string().default("20"),
     },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,

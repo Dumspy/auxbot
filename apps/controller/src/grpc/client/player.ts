@@ -9,7 +9,7 @@ import {
     ResumeResponse, 
     SkipResponse 
 } from '@auxbot/protos/player';
-import { env } from '../env.js';
+import { env } from '../../env.js';
 
 function getWorkerServiceAddress(guildId: string): string {
     return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;

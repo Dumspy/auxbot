@@ -8,6 +8,7 @@ export const env = createEnv({
         DISCORD_GUILD_ID: z.string(),
         DISCORD_CHANNEL_ID: z.string(),
         GRPC_PORT: z.string().default("50051"),
+        INACTIVITY_TIMEOUT_MINUTES: z.string().default("20"),
     },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,

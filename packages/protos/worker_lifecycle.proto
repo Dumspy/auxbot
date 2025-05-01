@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package worker_lifecycle;
+
+service WorkerLifecycle {
+  rpc NotifyShutdown (WorkerLifecycleRequest) returns (WorkerLifecycleResponse);
+}
+
+message WorkerLifecycleRequest {
+  string guildId = 1;
+  string reason = 2;
+}
+
+message WorkerLifecycleResponse {
+  bool acknowledged = 1;
+}

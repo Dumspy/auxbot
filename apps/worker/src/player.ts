@@ -5,11 +5,16 @@ import { randomUUID } from "crypto";
 import { existsSync } from "fs";
 import { unlink } from "fs/promises";
 import { queue } from "./queue.js";
+import { env } from "./env.js";
+import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 
 class Player {
   private player = createAudioPlayer();
   private currentSong: { url: string, requesterId: string } | null = null;
   private volume = 0.5; // 50% volume
+  private lastActivityTime: number = Date.now();
+  private inactivityCheckInterval: ReturnType<typeof setInterval>;
+  private readonly INACTIVITY_TIMEOUT = parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
 
   constructor() {
     this.player.on(AudioPlayerStatus.Idle, () => {
@@ -24,7 +29,42 @@ class Player {
           
     this.player.on('stateChange', (oldState, newState) => {
       console.log(`Player state changed from ${oldState.status} to ${newState.status}`);
+      this.updateLastActivity();
     });
+
+    this.inactivityCheckInterval = setInterval(() => this.checkInactivity(), 60000);
+  }
+
+  private async gracefulShutdown() {
+    console.log('Performing graceful shutdown...');
+    try {
+      // Perform any necessary cleanup here
+      clearInterval(this.inactivityCheckInterval);
+      this.player.stop();
+      // Notify controller about shutdown
+      await notifyShutdown('inactivity_timeout');
+    } catch (error) {
+      console.error('Error during shutdown:', error);
+    } finally {
+      process.exit(0);
+    }
+  }
+
+  private updateLastActivity() {
+    this.lastActivityTime = Date.now();
+  }
+
+  private async checkInactivity() {
+    const timeSinceLastActivity = Date.now() - this.lastActivityTime;
+    if (timeSinceLastActivity >= this.INACTIVITY_TIMEOUT && 
+        this.player.state.status !== AudioPlayerStatus.Playing) {
+      console.log('Shutting down due to inactivity');
+      clearInterval(this.inactivityCheckInterval);
+      
+      // Notify controller before shutting down
+      await notifyShutdown('inactivity_timeout');
+      await this.gracefulShutdown();
+    }
   }
 
   private async downloadAndPlayYouTubeAudio(url: string): Promise<AudioResource> {
@@ -103,6 +143,7 @@ class Player {
    * Play the next song in the queue
    */
   async playNext() {
+    this.updateLastActivity();
     const song = queue.pop();
     if (!song) {
       queue.playing = false;

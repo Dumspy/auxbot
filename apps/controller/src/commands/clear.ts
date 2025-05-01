@@ -1,6 +1,6 @@
 import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
-import { clearQueue } from '../grpc/player.js';
+import { clearQueue } from '../grpc/client/player.js';
 import { workerRegistry } from '../k8s.js';
 
 registerInteraction({
