@@ -4,7 +4,7 @@ import { checkWorkerHealth } from '../grpc/client/health.js';
 
 // Interface to represent a tracked worker
 interface TrackedWorker {
-  deployment: k8s.V1Deployment;
+  pod: k8s.V1Pod;  // Changed from deployment to pod
   service: k8s.V1Service;
   guildId: string;
   channelId: string;
@@ -15,13 +15,11 @@ interface TrackedWorker {
 export class WorkerRegistry {
   private workers: Map<string, TrackedWorker> = new Map();
   private k8sApi: k8s.CoreV1Api;
-  private appsApi: k8s.AppsV1Api;
 
   constructor() {
     const kc = new k8s.KubeConfig();
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-    this.appsApi = kc.makeApiClient(k8s.AppsV1Api);
     
     // Load existing workers on startup
     this.loadExistingWorkers().then(() => {
@@ -38,8 +36,8 @@ export class WorkerRegistry {
   /**
    * Register a new worker
    */
-  async registerWorker(deployment: k8s.V1Deployment, guildId: string, channelId: string): Promise<void> {
-    const deploymentName = deployment.metadata?.name || 'unknown';
+  async registerWorker(pod: k8s.V1Pod, guildId: string, channelId: string): Promise<void> {
+    const podName = pod.metadata?.name || 'unknown';
 
     // Find the associated service
     const services = await this.k8sApi.listNamespacedService({
@@ -49,11 +47,11 @@ export class WorkerRegistry {
 
     const service = services.items[0];
     if (!service) {
-      throw new Error(`No service found for worker ${deploymentName} (guild: ${guildId})`);
+      throw new Error(`No service found for worker ${podName} (guild: ${guildId})`);
     }
 
-    this.workers.set(deploymentName, {
-      deployment,
+    this.workers.set(podName, {
+      pod,
       service,
       guildId,
       channelId,
@@ -61,14 +59,14 @@ export class WorkerRegistry {
       lastChecked: new Date()
     });
     
-    console.log(`Registered worker deployment ${deploymentName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
+    console.log(`Registered worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
   }
 
   /**
    * Get information about a worker
    */
-  getWorker(deploymentName: string): TrackedWorker | undefined {
-    return this.workers.get(deploymentName);
+  getWorker(podName: string): TrackedWorker | undefined {
+    return this.workers.get(podName);
   }
 
   /**
@@ -82,9 +80,9 @@ export class WorkerRegistry {
   /**
    * Remove a worker from tracking
    */
-  unregisterWorker(deploymentName: string): void {
-    this.workers.delete(deploymentName);
-    console.log(`Unregistered worker deployment ${deploymentName}`);
+  unregisterWorker(podName: string): void {
+    this.workers.delete(podName);
+    console.log(`Unregistered worker pod ${podName}`);
   }
 
   /**
@@ -100,8 +98,8 @@ export class WorkerRegistry {
   private startHealthChecks(): void {
     // Check all workers every 30 seconds
     setInterval(async () => {
-      for (const [deploymentName, worker] of this.workers.entries()) {
-        await this.checkWorkerHealth(deploymentName);
+      for (const [podName, worker] of this.workers.entries()) {
+        await this.checkWorkerHealth(podName);
       }
     }, 30000);
   }
@@ -109,10 +107,10 @@ export class WorkerRegistry {
   /**
    * Check the health of a specific worker
    */
-  async checkWorkerHealth(deploymentName: string): Promise<boolean> {
-    const worker = this.workers.get(deploymentName);
+  async checkWorkerHealth(podName: string): Promise<boolean> {
+    const worker = this.workers.get(podName);
     if (!worker) {
-      console.log(`Worker ${deploymentName} not found for health check`);
+      console.log(`Worker ${podName} not found for health check`);
       return false;
     }
 
@@ -124,10 +122,10 @@ export class WorkerRegistry {
       worker.healthy = isHealthy;
       worker.lastChecked = new Date();
       
-      console.log(`Health check for worker ${deploymentName}: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+      console.log(`Health check for worker ${podName}: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'}`);
       return isHealthy;
     } catch (error) {
-      console.error(`Error checking health for worker ${deploymentName}:`, error);
+      console.error(`Error checking health for worker ${podName}:`, error);
       worker.healthy = false;
       worker.lastChecked = new Date();
       return false;
@@ -146,24 +144,22 @@ export class WorkerRegistry {
    */
   private async loadExistingWorkers(): Promise<void> {
     try {
-      // Get all deployments with the app=worker label in our namespace
-      const deployments = await this.appsApi.listNamespacedDeployment({
+      // Get all pods with the app=worker label in our namespace
+      const pods = await this.k8sApi.listNamespacedPod({
         namespace: env.K8S_NAMESPACE,
         labelSelector: 'app=worker'
       });
 
-      console.log(`Found ${deployments.items.length} worker deployments in the cluster`);
+      console.log(`Found ${pods.items.length} worker pods in the cluster`);
 
-      // Process each deployment
-      for (const deployment of deployments.items) {
-        const deploymentName = deployment.metadata?.name;
-        if (!deploymentName) continue;
+      // Process each pod
+      for (const pod of pods.items) {
+        const podName = pod.metadata?.name;
+        if (!podName) continue;
 
-        // Extract guild ID and channel ID from deployment labels or annotations
-        const guildId = deployment.metadata?.labels?.['discord-guild-id'] || 
-                       deployment.metadata?.annotations?.['discord-guild-id'];
-        const channelId = deployment.metadata?.labels?.['discord-channel-id'] || 
-                         deployment.metadata?.annotations?.['discord-channel-id'];
+        // Extract guild ID and channel ID from pod labels
+        const guildId = pod.metadata?.labels?.['discord-guild-id'];
+        const channelId = pod.metadata?.labels?.['discord-channel-id'];
 
         if (guildId && channelId) {
           // Find the associated service
@@ -174,13 +170,13 @@ export class WorkerRegistry {
 
           const service = services.items[0];
           if (!service) {
-            console.warn(`No service found for worker ${deploymentName} (guild: ${guildId})`);
+            console.warn(`No service found for worker ${podName} (guild: ${guildId})`);
             continue;
           }
 
-          // Register this worker with both deployment and service
-          this.workers.set(deploymentName, {
-            deployment,
+          // Register this worker with both pod and service
+          this.workers.set(podName, {
+            pod,
             service,
             guildId,
             channelId,
@@ -188,9 +184,9 @@ export class WorkerRegistry {
             lastChecked: new Date()
           });
 
-          console.log(`Loaded existing worker deployment ${deploymentName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
+          console.log(`Loaded existing worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
         } else {
-          console.warn(`Found worker deployment ${deploymentName} without guild ID or channel ID labels/annotations`);
+          console.warn(`Found worker pod ${podName} without guild ID or channel ID labels`);
         }
       }
     } catch (error) {
@@ -202,28 +198,28 @@ export class WorkerRegistry {
   /**
    * Clean up a worker's resources and unregister it
    */
-  async cleanupWorker(deploymentName: string): Promise<void> {
-    const worker = this.workers.get(deploymentName);
+  async cleanupWorker(podName: string): Promise<void> {
+    const worker = this.workers.get(podName);
     if (!worker) {
-      throw new Error(`Worker ${deploymentName} not found for cleanup`);
+      throw new Error(`Worker ${podName} not found for cleanup`);
     }
 
     try {
-      // Clean up the deployment and service
-      await this.appsApi.deleteNamespacedDeployment({
-        name: deploymentName,
+      // Clean up the pod and service
+      await this.k8sApi.deleteNamespacedPod({
+        name: podName,
         namespace: env.K8S_NAMESPACE
       });
       await this.k8sApi.deleteNamespacedService({
-        name: `auxbot-worker-${worker.guildId}`,
+        name: podName,
         namespace: env.K8S_NAMESPACE
       });
 
       // Unregister the worker
-      this.unregisterWorker(deploymentName);
-      console.log(`Cleaned up resources for worker ${deploymentName}`);
+      this.unregisterWorker(podName);
+      console.log(`Cleaned up resources for worker ${podName}`);
     } catch (error) {
-      console.error(`Error cleaning up worker ${deploymentName}:`, error);
+      console.error(`Error cleaning up worker ${podName}:`, error);
       throw error;
     }
   }

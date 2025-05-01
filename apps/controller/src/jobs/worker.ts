@@ -3,16 +3,16 @@ import * as k8s from '@kubernetes/client-node';
 
 interface WorkerResources {
     service: k8s.V1Service;
-    deployment: k8s.V1Deployment;
+    pod: k8s.V1Pod;  // Changed from deployment to pod
 }
 
 export function createWorkerResources(guildId: string, channelId: string): WorkerResources {
-    const name = 'auxbot-worker';
+    const name = `auxbot-worker-${guildId}`;
     
-    // Create the deployment first since we need its metadata for owner references
-    const deployment: k8s.V1Deployment = {
-        apiVersion: 'apps/v1',
-        kind: 'Deployment',
+    // Create the pod instead of deployment
+    const pod: k8s.V1Pod = {
+        apiVersion: 'v1',
+        kind: 'Pod',
         metadata: {
             name,
             labels: {
@@ -22,79 +22,62 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
             },
         },
         spec: {
-            replicas: 1,
-            selector: {
-                matchLabels: {
-                    app: 'worker',
-                    'discord-guild-id': guildId,
-                }
-            },
-            template: {
-                metadata: {
-                    labels: {
-                        app: 'worker',
-                        'discord-guild-id': guildId,
-                        'discord-channel-id': channelId
+            containers: [{
+                name: 'worker',
+                image: env.WORKER_IMAGE,
+                imagePullPolicy: 'Always',
+                ports: [
+                    {
+                        containerPort: 50051,
+                        name: 'grpc'
+                    }
+                ],
+                env: [
+                    {
+                        name: 'DISCORD_TOKEN',
+                        value: env.DISCORD_TOKEN
                     },
-                },
-                spec: {
-                    containers: [{
-                        name: 'worker',
-                        image: env.WORKER_IMAGE,
-                        imagePullPolicy: 'Always',
-                        ports: [
-                            {
-                                containerPort: 50051,
-                                name: 'grpc'
-                            }
-                        ],
-                        env: [
-                            {
-                                name: 'DISCORD_TOKEN',
-                                value: env.DISCORD_TOKEN
-                            },
-                            {
-                                name: 'DISCORD_CLIENT_ID',
-                                value: env.DISCORD_CLIENT_ID
-                            },
-                            {
-                                name: 'DISCORD_GUILD_ID',
-                                value: guildId
-                            },
-                            {
-                                name: 'DISCORD_CHANNEL_ID',
-                                value: channelId
-                            },
-                            {
-                                name: 'GRPC_PORT',
-                                value: '50051'
-                            },
-                            {
-                                name: 'INACTIVITY_TIMEOUT_MINUTES',
-                                value: env.INACTIVITY_TIMEOUT_MINUTES
-                            }
-                        ]
-                    }]
-                }
-            }
+                    {
+                        name: 'DISCORD_CLIENT_ID',
+                        value: env.DISCORD_CLIENT_ID
+                    },
+                    {
+                        name: 'DISCORD_GUILD_ID',
+                        value: guildId
+                    },
+                    {
+                        name: 'DISCORD_CHANNEL_ID',
+                        value: channelId
+                    },
+                    {
+                        name: 'GRPC_PORT',
+                        value: '50051'
+                    },
+                    {
+                        name: 'INACTIVITY_TIMEOUT_MINUTES',
+                        value: env.INACTIVITY_TIMEOUT_MINUTES
+                    }
+                ]
+            }]
         }
     };
 
-    // Create the headless service with owner reference to the deployment
+    // Create the headless service with owner reference to the pod
     const service: k8s.V1Service = {
         apiVersion: 'v1',
         kind: 'Service',
         metadata: {
-            name: `${name}-${guildId}`,  // Service name needs to be unique per guild for DNS
+            name,
             labels: {
                 app: 'worker',
-                'discord-guild-id': guildId
+                'discord-guild-id': guildId,
+                'discord-channel-id': channelId
             },
             ownerReferences: [{
-                apiVersion: 'apps/v1',
-                kind: 'Deployment',
-                name: deployment.metadata!.name!,
-                uid: '', // This will be filled in after deployment creation
+                apiVersion: 'v1',
+                kind: 'Pod',  // Changed from apps/v1 Deployment
+                name: pod.metadata!.name!,
+                uid: '', // This will be filled in after pod creation
                 controller: true,
                 blockOwnerDeletion: true
             }]
@@ -113,5 +96,5 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
         }
     };
 
-    return { service, deployment };
+    return { service, pod };
 }

@@ -19,17 +19,17 @@ registerService<WorkerLifecycleService, WorkerLifecycleServer>(
       }
 
       const [worker] = workers;
-      const deploymentName = worker?.deployment.metadata?.name;
+      const podName = worker?.pod.metadata?.name;
 
-      if (!deploymentName) {
-        console.error(`Worker found for guild ${guildId} but deployment name is missing`);
+      if (!podName) {
+        console.error(`Worker found for guild ${guildId} but pod name is missing`);
         callback(null, { acknowledged: false });
         return;
       }
 
       try {
         // Clean up the worker resources
-        await workerRegistry.cleanupWorker(deploymentName);
+        await workerRegistry.cleanupWorker(podName);
         callback(null, { acknowledged: true });
       } catch (error) {
         console.error(`Error cleaning up worker for guild ${guildId}:`, error);
@@ -37,4 +37,4 @@ registerService<WorkerLifecycleService, WorkerLifecycleServer>(
       }
     }
   }
-)
+);

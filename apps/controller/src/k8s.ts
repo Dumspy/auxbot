@@ -20,24 +20,24 @@ export async function spawnWorkerPod(guildId: string, channelId: string): Promis
     // Check if a worker for this guild already exists
     const existingWorkers = workerRegistry.getWorkersByGuild(guildId);
     if (existingWorkers[0]) {
-        // If there's an existing worker, return its deployment name
+        // If there's an existing worker, return its pod name
         const existingWorker = existingWorkers[0];
-        console.log(`Using existing worker for guild ${guildId}: ${existingWorker.deployment.metadata?.name}`);
-        return existingWorker.deployment.metadata?.name || 'unknown';
+        console.log(`Using existing worker for guild ${guildId}: ${existingWorker.pod.metadata?.name}`);
+        return existingWorker.pod.metadata?.name || 'unknown';
     }
 
-    // Create both service and deployment resources
+    // Create both service and pod resources
     const resources = createWorkerResources(guildId, channelId);
 
-    // Create the deployment first
-    const workerDeployment = await k8sApi.createNamespacedDeployment({
+    // Create the pod first
+    const workerPod = await coreV1Api.createNamespacedPod({
         namespace: env.K8S_NAMESPACE,
-        body: resources.deployment
+        body: resources.pod
     });
     
-    // Set the owner reference UID from the created deployment
-    if (resources.service.metadata?.ownerReferences?.[0] && workerDeployment.metadata?.uid) {
-        resources.service.metadata.ownerReferences[0].uid = workerDeployment.metadata.uid;
+    // Set the owner reference UID from the created pod
+    if (resources.service.metadata?.ownerReferences?.[0] && workerPod.metadata?.uid) {
+        resources.service.metadata.ownerReferences[0].uid = workerPod.metadata.uid;
     } else {
         throw new Error('Failed to set owner reference: missing required metadata');
     }
@@ -48,11 +48,11 @@ export async function spawnWorkerPod(guildId: string, channelId: string): Promis
         body: resources.service
     });
     
-    const deploymentName = workerDeployment.metadata?.name || 'unknown';
-    console.log(`Worker deployment created: ${deploymentName} for guild: ${guildId}, channel: ${channelId}`);
+    const podName = workerPod.metadata?.name || 'unknown';
+    console.log(`Worker pod created: ${podName} for guild: ${guildId}, channel: ${channelId}`);
 
     // Register the newly spawned worker in our registry
-    workerRegistry.registerWorker(workerDeployment, guildId, channelId);
+    workerRegistry.registerWorker(workerPod, guildId, channelId);
 
-    return deploymentName;
+    return podName;
 }
