@@ -6,14 +6,9 @@ import {
     HealthCheckResponse_ServingStatus 
 } from '@auxbot/protos/health';
 
-function getWorkerServiceAddress(guildId: string): string {
-    return `auxbot-worker-${guildId}.${process.env.K8S_NAMESPACE}.svc.cluster.local:50051`;
-}
 
-export function checkWorkerHealth(guildId: string, service: string = 'worker'): Promise<boolean> {
+export function checkWorkerHealth(address: string, service: string = 'worker'): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        const address = getWorkerServiceAddress(guildId);
-        
         // Create client using the generated client class
         const client = new HealthCheckClient(
             address,
