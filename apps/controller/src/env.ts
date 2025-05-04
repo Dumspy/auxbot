@@ -10,6 +10,8 @@ export const env = createEnv({
         DISCORD_CLIENT_ID: z.string(),
         WORKER_GRPC_PORT: z.string().default("50051"),
         INACTIVITY_TIMEOUT_MINUTES: z.string().default("20"),
+        SENTRY_DSN: z.string(),
+        NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,

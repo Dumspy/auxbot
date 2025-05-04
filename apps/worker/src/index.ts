@@ -3,9 +3,28 @@ import { entersState, joinVoiceChannel, VoiceConnectionStatus, VoiceConnection }
 import { initClient, getClient } from './discord.js';
 import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
+import { initSentry } from '@auxbot/sentry';
 
 const client = getClient();
 let voiceConnection: VoiceConnection | null = null;
+
+async function boot() {
+    try {
+        // Initialize Sentry as early as possible
+        initSentry({
+            serverName: 'worker',
+        });
+
+        await initClient();
+        console.log('Discord client initialized');
+        
+        // Initialize gRPC server
+        await initGrpc();
+        console.log('gRPC health check server initialized');
+    } catch (error) {
+        console.error('Error during boot process:', error);
+    }
+}
 
 client.once('ready', async () => {
     console.log('Worker is ready');
@@ -40,15 +59,6 @@ client.once('ready', async () => {
 // Export the voice connection for use in other files
 export function getVoiceConnection() {
     return voiceConnection;
-}
-
-async function boot(){
-    await initClient();
-    console.log('Discord client initialized');
-    
-    // Initialize gRPC server
-    await initGrpc();
-    console.log('gRPC health check server initialized');
 }
 
 boot()
