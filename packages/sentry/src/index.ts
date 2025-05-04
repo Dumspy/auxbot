@@ -24,21 +24,5 @@ export function initSentry(options: InitOptions = {}) {
     });
 }
 
-export function captureException(error: Error, context?: Record<string, any>) {
-    if (error instanceof Error) {
-        Sentry.captureException(error, {
-            extra: context,
-        });
-    } else {
-        Sentry.captureMessage(String(error), {
-            extra: context,
-        });
-    }
-}
-
-export function flush(): Promise<boolean> {
-    return Sentry.flush();
-}
-
 // Re-export everything from Sentry for advanced usage
 export * from '@sentry/node';
