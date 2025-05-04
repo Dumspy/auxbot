@@ -45,14 +45,3 @@ boot().catch(err => {
     console.error('Error during boot:', err);
     process.exit(1);
 });
-
-// Sentry debug
-
-try {
-    //@ts-ignore
-  foo();
-} catch (e) {
-    //@ts-ignore
-  captureException(e);
-  console.error('Captured exception:', e);
-}

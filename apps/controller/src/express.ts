@@ -1,5 +1,6 @@
 import express from 'express';
 import { env } from './env.js'
+import { captureException } from '@auxbot/sentry';
 
 const app = express();
 app.use(express.json());
@@ -25,3 +26,15 @@ export function initApp(): Promise<void> {
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+
+app.get('/error', (req, res) => {
+
+    try {
+        //@ts-ignore
+        foo();
+    } catch (e) {
+        //@ts-ignore
+        captureException(e);
+        console.error('Captured exception:', e);
+    }
+})
