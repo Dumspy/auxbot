@@ -60,6 +60,14 @@ export function createWorkerResources(guildId: string, channelId: string): Worke
                     {
                         name: 'K8S_NAMESPACE',
                         value: env.K8S_NAMESPACE
+                    },
+                    {
+                        name: 'SENTRY_DSN',
+                        value: env.SENTRY_DSN
+                    },
+                    {
+                        name: 'NODE_ENV',
+                        value: env.NODE_ENV
                     }
                 ]
             }]

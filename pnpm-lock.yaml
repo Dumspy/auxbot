@@ -81,6 +81,9 @@ importers:
       '@auxbot/protos':
         specifier: workspace:^
         version: link:../../packages/protos
+      '@auxbot/sentry':
+        specifier: workspace:*
+        version: link:../../packages/sentry
       '@discordjs/opus':
         specifier: ^0.10.0
         version: 0.10.0

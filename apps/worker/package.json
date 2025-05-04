@@ -13,6 +13,7 @@
   "dependencies": {
     "@auxbot/discord": "workspace:*",
     "@auxbot/protos": "workspace:^",
+    "@auxbot/sentry": "workspace:*",
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.18.0",
     "@grpc/grpc-js": "^1.13.3",
