@@ -5,7 +5,7 @@ import {
     HealthCheckResponse,
     HealthCheckResponse_ServingStatus 
 } from '@auxbot/protos/health';
-
+import { captureException } from '@auxbot/sentry';
 
 export function checkWorkerHealth(address: string, service: string = 'worker'): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -20,7 +20,12 @@ export function checkWorkerHealth(address: string, service: string = 'worker'): 
         
         client.check(request, (error: Error | null, response: HealthCheckResponse) => {
             if (error) {
-                console.error(`Health check failed for ${address}:`, error);
+                captureException(error, {
+                    tags: {
+                        address,
+                        service,
+                    },
+                });
                 resolve(false);
                 return;
             }

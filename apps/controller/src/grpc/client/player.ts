@@ -10,6 +10,7 @@ import {
     SkipResponse 
 } from '@auxbot/protos/player';
 import { env } from '../../env.js';
+import { captureException } from '@auxbot/sentry';
 
 function getWorkerServiceAddress(guildId: string): string {
     return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;
@@ -30,7 +31,13 @@ export async function addSong(guildId: string, url: string, requesterId: string)
         
         client.addSong(request, (error, response) => {
             if (error) {
-                console.error('Error adding song:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                        url,
+                        requesterId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -46,7 +53,11 @@ export async function skipSong(guildId: string): Promise<SkipResponse> {
         
         client.skipSong(request, (error, response) => {
             if (error) {
-                console.error('Error skipping song:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -62,7 +73,11 @@ export async function clearQueue(guildId: string): Promise<ClearQueueResponse> {
         
         client.clearQueue(request, (error, response) => {
             if (error) {
-                console.error('Error clearing queue:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -78,7 +93,11 @@ export async function getQueueStatus(guildId: string): Promise<QueueStatusRespon
         
         client.getQueueStatus(request, (error, response) => {
             if (error) {
-                console.error('Error getting queue status:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -94,7 +113,11 @@ export async function pausePlayback(guildId: string): Promise<PauseResponse> {
         
         client.pausePlayback(request, (error, response) => {
             if (error) {
-                console.error('Error pausing playback:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -110,7 +133,11 @@ export async function resumePlayback(guildId: string): Promise<ResumeResponse> {
         
         client.resumePlayback(request, (error, response) => {
             if (error) {
-                console.error('Error resuming playback:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }
@@ -126,7 +153,11 @@ export async function getPlayerStatus(guildId: string): Promise<PlayerStatusResp
         
         client.getPlayerStatus(request, (error, response) => {
             if (error) {
-                console.error('Error getting player status:', error);
+                captureException(error, {
+                    tags: {
+                        guildId,
+                    },
+                });
                 reject(error);
                 return;
             }

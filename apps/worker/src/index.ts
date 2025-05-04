@@ -3,7 +3,7 @@ import { entersState, joinVoiceChannel, VoiceConnectionStatus, VoiceConnection }
 import { initClient, getClient } from './discord.js';
 import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
-import { initSentry } from '@auxbot/sentry';
+import { initSentry, captureException } from '@auxbot/sentry';
 
 const client = getClient();
 let voiceConnection: VoiceConnection | null = null;
@@ -22,7 +22,11 @@ async function boot() {
         await initGrpc();
         console.log('gRPC health check server initialized');
     } catch (error) {
-        console.error('Error during boot process:', error);
+        captureException(error, {
+            tags: {
+                function: 'boot',
+            },
+        });
     }
 }
 
@@ -32,7 +36,11 @@ client.once('ready', async () => {
     try {
         const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID);
         if (!guild) {
-            console.error(`Guild ${env.DISCORD_GUILD_ID} not found!`);
+            captureException(new Error(`Guild ${env.DISCORD_GUILD_ID} not found!`), {
+                tags: {
+                    function: 'client.once ready',
+                },
+            });
             return;
         }
         
@@ -52,7 +60,11 @@ client.once('ready', async () => {
         console.log('Successfully joined voice channel!');
 
     } catch (error) {
-        console.error('Error joining voice channel:', error);
+        captureException(error, {
+            tags: {
+                function: 'client.once ready',
+            },
+        });
     }
 });
 
