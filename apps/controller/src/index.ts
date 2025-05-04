@@ -1,4 +1,4 @@
-import { initSentry } from '@auxbot/sentry';
+import { initSentry, captureException} from '@auxbot/sentry';
 import { initApp } from './express.js';
 import { initClient } from './discord.js';
 import { workerRegistry } from './k8s.js';
@@ -45,3 +45,13 @@ boot().catch(err => {
     console.error('Error during boot:', err);
     process.exit(1);
 });
+
+// Sentry debug
+
+try {
+    //@ts-ignore
+  foo();
+} catch (e) {
+    //@ts-ignore
+  captureException(e);
+}
