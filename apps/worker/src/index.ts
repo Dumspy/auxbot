@@ -9,17 +9,21 @@ const client = getClient();
 let voiceConnection: VoiceConnection | null = null;
 
 async function boot() {
-    // Initialize Sentry as early as possible
-    initSentry({
-        serverName: 'worker',
-    });
+    try {
+        // Initialize Sentry as early as possible
+        initSentry({
+            serverName: 'worker',
+        });
 
-    await initClient();
-    console.log('Discord client initialized');
-    
-    // Initialize gRPC server
-    await initGrpc();
-    console.log('gRPC health check server initialized');
+        await initClient();
+        console.log('Discord client initialized');
+        
+        // Initialize gRPC server
+        await initGrpc();
+        console.log('gRPC health check server initialized');
+    } catch (error) {
+        console.error('Error during boot process:', error);
+    }
 }
 
 client.once('ready', async () => {
