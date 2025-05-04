@@ -13,34 +13,24 @@ async function importCommands() {
     const commandsFolder = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandsFolder) {
-        console.log(`Importing command: ${file}`);
         const filePath = path.join(commandsPath, file);
         
         await import(filePath)
-            .then(() => console.log(`Successfully imported command: ${file}`))
-            .catch(err => console.error(`Error importing command ${file}:`, err));
     }
-    
-    console.log('All commands imported');
 }
 
 async function registerCommands() {
     const interactions = getInteractions();
-    console.log('Registering commands:', interactions.map(interaction => interaction.data.name));
     if (interactions.length === 0) {
-        console.log('No commands to register');
         return;
     }
 
     const commands = interactions.map(interaction => interaction.data.toJSON());
-    console.log('Commands:', commands);
 
     const rest = new REST().setToken(env.DISCORD_TOKEN);
     await rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), {
         body: commands,
     })
-        .then(() => console.log('Successfully registered application commands.'))
-        .catch(console.error);
 }
 
 export function initClient() {
