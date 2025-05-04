@@ -2,6 +2,7 @@ import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js';
 import { WorkerLifecycleServer, WorkerLifecycleRequest, WorkerLifecycleResponse, WorkerLifecycleService } from '@auxbot/protos/worker_lifecycle';
 import { workerRegistry } from '../../k8s.js';
 import { registerService } from '../index.js';
+import { captureException } from '@auxbot/sentry';
 
 registerService<WorkerLifecycleService, WorkerLifecycleServer>(
   WorkerLifecycleService,
@@ -32,7 +33,13 @@ registerService<WorkerLifecycleService, WorkerLifecycleServer>(
         await workerRegistry.cleanupWorker(podName);
         callback(null, { acknowledged: true });
       } catch (error) {
-        console.error(`Error cleaning up worker for guild ${guildId}:`, error);
+        captureException(error, {
+          tags: {
+            guildId,
+            podName,
+            reason,
+          },
+        });
         callback(null, { acknowledged: false });
       }
     }
