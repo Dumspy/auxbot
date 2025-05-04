@@ -21,11 +21,11 @@ export function initSentry(options: InitOptions = {}) {
         Sentry.init({
             dsn: env.SENTRY_DSN,
             environment: env.NODE_ENV,
-            release: options.release,
-            serverName: options.serverName,
-            initialScope: {
-                tags: options.tags,
-            },
+            // release: options.release,
+            // serverName: options.serverName,
+            // initialScope: {
+            //     tags: options.tags,
+            // },
             debug: true, // Enable debug logging
         });
         console.log('Sentry initialized successfully');
@@ -46,10 +46,5 @@ export function captureException(error: Error | unknown, context?: Record<string
 }
 
 export function flush(timeout?: number): Promise<boolean> {
-    if (!env.SENTRY_DSN) {
-        console.warn('Sentry DSN not provided, flush not performed');
-        return Promise.resolve(false);
-    }
-
     return Sentry.flush(timeout);
 }
