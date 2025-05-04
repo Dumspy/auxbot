@@ -13,6 +13,9 @@ export function initSentry(options: InitOptions = {}) {
         return;
     }
 
+    console.log('Initializing Sentry with DSN:', env.SENTRY_DSN);
+    console.log('Sentry environment:', env.NODE_ENV);
+
     Sentry.init({
         dsn: env.SENTRY_DSN,
         environment: env.NODE_ENV,

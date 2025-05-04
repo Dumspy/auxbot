@@ -54,4 +54,5 @@ try {
 } catch (e) {
     //@ts-ignore
   captureException(e);
+  console.error('Captured exception:', e);
 }
