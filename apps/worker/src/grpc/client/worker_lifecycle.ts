@@ -19,7 +19,6 @@ export const notifyShutdown = async (reason: string): Promise<boolean> => {
               reason,
             },
           });
-          console.error('Error notifying controller of shutdown:', error);
           return resolve(false);
         }
         resolve(response.acknowledged);

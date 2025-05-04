@@ -8,6 +8,7 @@ import { queue } from "./queue.js";
 import { env } from "./env.js";
 import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 import { getVoiceConnection } from "./index.js";
+import { captureException } from '@auxbot/sentry';
 
 class Player {
   private player = createAudioPlayer();
@@ -24,7 +25,11 @@ class Player {
     });
 
     this.player.on('error', error => {
-      console.error('Error in audio player:', error);
+      captureException(error, {
+        tags: {
+          function: 'player.on error',
+        },
+      });
       this.playNext();
     });
           
@@ -56,7 +61,11 @@ class Player {
       // Now notify controller about shutdown
       await notifyShutdown('inactivity_timeout');
     } catch (error) {
-      console.error('Error during shutdown:', error);
+      captureException(error, {
+        tags: {
+          function: 'gracefulShutdown',
+        },
+      });
     } finally {
       process.exit(0);
     }
@@ -102,6 +111,12 @@ class Player {
       ]);
 
       ytDlp.on("error", (error) => {
+        captureException(error, {
+          tags: {
+            function: 'downloadAndPlayYouTubeAudio',
+            url,
+          },
+        });
         reject(new Error(`yt-dlp process error: ${error.message}`));
       });
 
@@ -111,12 +126,25 @@ class Player {
 
       ytDlp.on("close", async (code) => {
         if (code !== 0 && code !== null) {
+          captureException(new Error(`yt-dlp exited with code ${code}`), {
+            tags: {
+              function: 'downloadAndPlayYouTubeAudio',
+              url,
+              code,
+            },
+          });
           reject(new Error(`yt-dlp exited with code ${code}`));
           return;
         }
 
         // Check if file exists
         if (!existsSync(filename)) {
+          captureException(new Error("Audio file was not created."), {
+            tags: {
+              function: 'downloadAndPlayYouTubeAudio',
+              url,
+            },
+          });
           reject(new Error("Audio file was not created."));
           return;
         }

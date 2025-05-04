@@ -1,6 +1,7 @@
 import { registerInteraction } from '@auxbot/discord/interaction'
 import { SlashCommandBuilder } from 'discord.js'
 import { spawnWorkerPod } from '../k8s.js'
+import { captureException } from '@auxbot/sentry';
 
 registerInteraction({
     data: new SlashCommandBuilder()
@@ -30,7 +31,13 @@ registerInteraction({
             const jobName = await spawnWorkerPod(guildId, channel.id)
             await interaction.editReply(`Joining voice channel! Worker pod "${jobName}" spawned.`)
         } catch (error: any) {
-            console.error('Error handling join command:', error)
+            captureException(error, {
+                tags: {
+                    command: 'join',
+                    guildId: interaction.guildId,
+                    channelId: interaction.options.getChannel('channel')?.id,
+                },
+            });
             await interaction.editReply('Failed to join the channel: ' + (error.message || 'Unknown error'))
         }
     }

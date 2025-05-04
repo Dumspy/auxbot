@@ -36,12 +36,20 @@ async function boot() {
             });
         }, 60000);
     } catch (error) {
-        console.error('Error during boot:', error);
+        captureException(error, {
+            tags: {
+                function: 'boot',
+            },
+        });
         throw error;
     }
 }
 
 boot().catch(err => {
-    console.error('Error during boot:', err);
+    captureException(err, {
+        tags: {
+            function: 'boot',
+        },
+    });
     process.exit(1);
 });
