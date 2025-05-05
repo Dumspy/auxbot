@@ -4,6 +4,7 @@ package worker_lifecycle;
 
 service WorkerLifecycle {
   rpc NotifyShutdown (WorkerLifecycleRequest) returns (WorkerLifecycleResponse);
+  rpc NotifyReady (WorkerReadyRequest) returns (WorkerReadyResponse);
 }
 
 message WorkerLifecycleRequest {
@@ -12,5 +13,13 @@ message WorkerLifecycleRequest {
 }
 
 message WorkerLifecycleResponse {
+  bool acknowledged = 1;
+}
+
+message WorkerReadyRequest {
+  string guildId = 1;
+}
+
+message WorkerReadyResponse {
   bool acknowledged = 1;
 }
