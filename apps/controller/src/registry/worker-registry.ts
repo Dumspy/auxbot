@@ -10,6 +10,7 @@ interface TrackedWorker {
   channelId: string;
   healthy: boolean;
   lastChecked: Date;
+  ready: boolean; // New field to track worker readiness
 }
 
 export class WorkerRegistry {
@@ -56,7 +57,8 @@ export class WorkerRegistry {
       guildId,
       channelId,
       healthy: false,
-      lastChecked: new Date()
+      lastChecked: new Date(),
+      ready: false // Initialize as not ready
     });
     
     console.log(`Registered worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
@@ -99,7 +101,9 @@ export class WorkerRegistry {
     // Check all workers every 30 seconds
     setInterval(async () => {
       for (const [podName, worker] of this.workers.entries()) {
-        await this.checkWorkerHealth(podName);
+        if (worker.ready) { // Only check health if the worker is ready
+          await this.checkWorkerHealth(podName);
+        }
       }
     }, 30000);
   }
@@ -181,7 +185,8 @@ export class WorkerRegistry {
             guildId,
             channelId,
             healthy: false,
-            lastChecked: new Date()
+            lastChecked: new Date(),
+            ready: false // Initialize as not ready
           });
 
           console.log(`Loaded existing worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
@@ -221,6 +226,19 @@ export class WorkerRegistry {
     } catch (error) {
       console.error(`Error cleaning up worker ${podName}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Mark a worker as ready
+   */
+  markWorkerAsReady(podName: string): void {
+    const worker = this.workers.get(podName);
+    if (worker) {
+      worker.ready = true;
+      console.log(`Worker ${podName} marked as ready`);
+    } else {
+      console.warn(`Worker ${podName} not found to mark as ready`);
     }
   }
 }

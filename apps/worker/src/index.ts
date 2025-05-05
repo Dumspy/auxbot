@@ -4,6 +4,7 @@ import { initClient, getClient } from './discord.js';
 import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
 import { initSentry, captureException } from '@auxbot/sentry';
+import { notifyReady } from './grpc/client/worker_lifecycle.js';
 
 const client = getClient();
 let voiceConnection: VoiceConnection | null = null;
@@ -58,6 +59,14 @@ client.once('ready', async () => {
 
         await entersState(voiceConnection, VoiceConnectionStatus.Ready, 30_000);
         console.log('Successfully joined voice channel!');
+
+        // Notify the controller that the worker is ready
+        const acknowledged = await notifyReady(env.DISCORD_GUILD_ID);
+        if (acknowledged) {
+            console.log('Controller acknowledged worker readiness');
+        } else {
+            console.warn('Controller did not acknowledge worker readiness');
+        }
 
     } catch (error) {
         captureException(error, {

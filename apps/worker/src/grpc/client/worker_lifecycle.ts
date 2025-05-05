@@ -1,5 +1,5 @@
 import { credentials } from '@grpc/grpc-js';
-import { WorkerLifecycleClient, WorkerLifecycleResponse } from '@auxbot/protos/worker_lifecycle';
+import { WorkerLifecycleClient, WorkerLifecycleResponse, WorkerReadyResponse } from '@auxbot/protos/worker_lifecycle';
 import { env } from '../../env.js';
 import { captureException } from '@auxbot/sentry';
 
@@ -17,6 +17,25 @@ export const notifyShutdown = async (reason: string): Promise<boolean> => {
           captureException(error, {
             tags: {
               reason,
+            },
+          });
+          return resolve(false);
+        }
+        resolve(response.acknowledged);
+      }
+    );
+  });
+};
+
+export const notifyReady = async (guildId: string): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    client.notifyReady(
+      { guildId },
+      (error: Error | null, response: WorkerReadyResponse) => {
+        if (error) {
+          captureException(error, {
+            tags: {
+              guildId,
             },
           });
           return resolve(false);
