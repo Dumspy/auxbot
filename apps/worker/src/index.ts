@@ -4,13 +4,13 @@ import { initClient, getClient } from './discord.js';
 import { player } from './player.js';
 import { initGrpc } from './grpc/index.js';
 import { initSentry, captureException } from '@auxbot/sentry';
+import { Events } from 'discord.js';
 
 const client = getClient();
 let voiceConnection: VoiceConnection | null = null;
 
 async function boot() {
     try {
-        // Initialize Sentry as early as possible
         initSentry({
             serverName: 'worker',
         });
@@ -18,7 +18,6 @@ async function boot() {
         await initClient();
         console.log('Discord client initialized');
         
-        // Initialize gRPC server
         await initGrpc();
         console.log('gRPC health check server initialized');
     } catch (error) {
@@ -30,7 +29,7 @@ async function boot() {
     }
 }
 
-client.once('ready', async () => {
+client.once(Events.ClientReady, async () => {
     console.log('Worker is ready');
     
     try {
@@ -53,13 +52,14 @@ client.once('ready', async () => {
             adapterCreator: guild.voiceAdapterCreator,
         });
 
-        // Subscribe the connection to our player instance
         voiceConnection.subscribe(player.getRawPlayer());
 
         await entersState(voiceConnection, VoiceConnectionStatus.Ready, 30_000);
         console.log('Successfully joined voice channel!');
 
     } catch (error) {
+        console.error('Error during voice channel connection:', error);
+
         captureException(error, {
             tags: {
                 function: 'client.once ready',
@@ -68,7 +68,6 @@ client.once('ready', async () => {
     }
 });
 
-// Export the voice connection for use in other files
 export function getVoiceConnection() {
     return voiceConnection;
 }
