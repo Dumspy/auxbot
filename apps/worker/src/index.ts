@@ -52,10 +52,33 @@ client.once(Events.ClientReady, async () => {
             adapterCreator: guild.voiceAdapterCreator,
         });
 
-        voiceConnection.subscribe(player.getRawPlayer());
+        try {
+            // Increase timeout to 60 seconds for kubernetes environment
+            await entersState(voiceConnection, VoiceConnectionStatus.Ready, 60_000);
+            voiceConnection.subscribe(player.getRawPlayer());
+            console.log('Successfully joined voice channel!');
+        } catch (error) {
+            console.error('Failed to establish voice connection:', error);
+            // Attempt to destroy the connection if it failed
+            voiceConnection.destroy();
+            voiceConnection = null;
+            throw error;
+        }
 
-        await entersState(voiceConnection, VoiceConnectionStatus.Ready, 30_000);
-        console.log('Successfully joined voice channel!');
+        // Set up connection state change listener
+        voiceConnection.on('stateChange', (oldState, newState) => {
+            console.log(`Voice connection state changed from ${oldState.status} to ${newState.status}`);
+            if (newState.status === VoiceConnectionStatus.Disconnected) {
+                // Handle disconnection and attempt to reconnect
+                try {
+                    voiceConnection?.rejoin();
+                } catch (error) {
+                    console.error('Failed to rejoin voice channel:', error);
+                    voiceConnection?.destroy();
+                    voiceConnection = null;
+                }
+            }
+        });
 
     } catch (error) {
         console.error('Error during voice channel connection:', error);
