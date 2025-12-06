@@ -11,13 +11,13 @@
         }
     },
     "dependencies": {
-        "discord.js": "^14.18.0"
+        "discord.js": "^14.25.1"
     },
     "devDependencies": {
         "@auxbot/eslint-config": "workspace:*",
         "@auxbot/typescript-config": "workspace:*",
         "@types/node": "^20.11.0",
-        "eslint": "^9.24.0",
+        "eslint": "^9.39.1",
         "tsx": "^4.7.0",
         "typescript": "^5.8.2"
     }
