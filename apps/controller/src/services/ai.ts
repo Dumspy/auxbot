@@ -1,10 +1,11 @@
-import { createZhipu } from "zhipu-ai-provider";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText } from "ai";
 import { captureException } from "@auxbot/sentry";
 import { env } from "../env.js";
 
-const zhipu = createZhipu({
-  baseURL: "https://api.z.ai/api/paas/v4",
+const zhipu = createOpenAICompatible({
+  baseURL: "https://api.z.ai/api/coding/paas/v4",
+  name: "zhipu",
   apiKey: env.ZHIPU_API_KEY,
 });
 
