@@ -4,3 +4,11 @@
 - This fixes precision issues with Discord snowflake IDs that exceed 2^53
 - Ran lint: passed with only pre-existing warnings
 - Typecheck: pre-existing errors unrelated to this change
+
+[2026-01-22] Phase 1, Task 2: Reworked message pagination to fetch backwards with before:
+- Modified: apps/controller/src/utils/messages.ts:44-87
+- Changed from forward pagination (after:) to backward pagination (before:)
+- Removed initial snowflake calculation and consecutive empty batches logic
+- Added messages.reverse() to maintain chronological order
+- Stops correctly when < 100 messages returned or timeframe exceeded
+- Ran lint: passed with only pre-existing warnings

@@ -10,7 +10,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: JS `number` exceeds 2^53 precision for Discord timestamps, producing wrong snowflakes
   - Fix: Use `BigInt` and bitwise shift: `(BigInt(timestampMs) - DISCORD_EPOCH) << 22n`
 
-- [ ] Rework message pagination to fetch backwards with `before:` instead of `after:`
+- [x] Rework message pagination to fetch backwards with `before:` instead of `after:`
 
   - File: `apps/controller/src/utils/messages.ts`
   - Issue: Fetching with `after:` is error-prone (ordering, duplicates, missing chunks)

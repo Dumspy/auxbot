@@ -50,16 +50,13 @@ export async function fetchMessagesInRange(
   const messages: Message<boolean>[] = [];
   const endTime = Date.now();
   const startTime = endTime - timeframeMs;
-  const startSnowflake = calculateSnowflake(startTime);
 
-  let lastSnowflake: string | undefined = startSnowflake;
-  let consecutiveEmptyBatches = 0;
-  const maxEmptyBatches = 3;
+  let beforeId: string | undefined;
 
   while (messages.length < limit) {
     try {
       const fetched = await channel.messages.fetch({
-        after: lastSnowflake,
+        before: beforeId,
         limit: 100,
       });
 
@@ -75,12 +72,7 @@ export async function fetchMessagesInRange(
       }
 
       if (filteredMessages.length === 0) {
-        consecutiveEmptyBatches++;
-        if (consecutiveEmptyBatches >= maxEmptyBatches) {
-          break;
-        }
-      } else {
-        consecutiveEmptyBatches = 0;
+        break;
       }
 
       const remainingSlots = limit - messages.length;
@@ -91,7 +83,7 @@ export async function fetchMessagesInRange(
         break;
       }
 
-      lastSnowflake = messages[messages.length - 1]?.id;
+      beforeId = fetched.last()?.id;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -105,6 +97,7 @@ export async function fetchMessagesInRange(
     }
   }
 
+  messages.reverse();
   return messages;
 }
 
