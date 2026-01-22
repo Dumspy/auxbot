@@ -1,5 +1,5 @@
 study specs/README.md
-study specs/summary-implementation-plan.md and pick the most important task(tasks are the individual items under phases with a checkboxes) to work on
+study specs/summary-feature-review-feedback.md and pick the most important task(tasks are the individual items under phases with a checkboxes) to work on
 study progress.txt
 
 EXTERMLY IMPORTANT:
@@ -9,5 +9,6 @@ EXTERMLY IMPORTANT:
 - Append your progress to progress.txt
 - Update the implementation plan with what you've done
 - Commit changes your changes (AFTER EACH TASK)
+- ONCE YOU COMMIT DO NOT GO BACK AND PICK A NEW TASK
 
 Once the implementation plan is completed, output <promise>COMPLETE</promise>
