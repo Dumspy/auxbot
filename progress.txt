@@ -40,3 +40,10 @@
 - Truncates formatted messages and adds note if exceeds limit
 - Prevents prompts that are too large for AI model context
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 4: Suppress mention pings with allowedMentions
+- Modified: apps/controller/src/commands/summary.ts:102-105
+- Added allowedMentions: { parse: [] } to editReply call
+- Prevents AI output from triggering @everyone, role, or user mentions
+- Phase 2 (High Priority: Safety + UX) now complete
+- Ran lint: passed with only pre-existing warnings

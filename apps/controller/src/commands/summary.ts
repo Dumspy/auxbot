@@ -111,7 +111,10 @@ registerInteraction({
         .setColor("#0099ff")
         .setTimestamp();
 
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({
+        embeds: [embed],
+        allowedMentions: { parse: [] },
+      });
     } catch (error: any) {
       captureException(error, {
         tags: {

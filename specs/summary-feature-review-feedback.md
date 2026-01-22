@@ -41,7 +41,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: 500 messages can produce prompts too large for model context
   - Fix: Truncate formatted messages and note "truncated to last N messages"
 
-- [ ] Suppress mention pings in reply with `allowedMentions: { parse: [] }`
+- [x] Suppress mention pings in reply with `allowedMentions: { parse: [] }`
   - File: `apps/controller/src/commands/summary.ts`
   - Issue: AI output could contain `@everyone`, role mentions, or user mentions
   - Fix: Add `allowedMentions: { parse: [] }` to `editReply()` call
