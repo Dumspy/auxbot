@@ -1,0 +1,155 @@
+[2026-01-22] Phase 1, Task 1: Fixed snowflake calculation to use BigInt instead of number
+- Modified: apps/controller/src/utils/messages.ts:40-42
+- Changed from ((timestamp - 1420070400000) * 4194304).toString() to ((BigInt(timestamp) - 1420070400000n) << 22n).toString()
+- This fixes precision issues with Discord snowflake IDs that exceed 2^53
+- Ran lint: passed with only pre-existing warnings
+- Typecheck: pre-existing errors unrelated to this change
+
+[2026-01-22] Phase 1, Task 2: Reworked message pagination to fetch backwards with before:
+- Modified: apps/controller/src/utils/messages.ts:44-87
+- Changed from forward pagination (after:) to backward pagination (before:)
+- Removed initial snowflake calculation and consecutive empty batches logic
+- Added messages.reverse() to maintain chronological order
+- Stops correctly when < 100 messages returned or timeframe exceeded
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 1, Task 3: Added max retry count to rate limit handling
+- Modified: apps/controller/src/utils/messages.ts:44-97
+- Added maxRetries constant (5) and retries counter
+- Throws error after max retries exceeded instead of retrying forever
+- Resets retry counter on successful fetch
+- Ran lint: passed with only pre-existing warnings
+- Phase 1 (Critical Fixes) now complete
+
+[2026-01-22] Phase 2, Task 1: Cap embed description to Discord's 4096 character limit
+- Modified: apps/controller/src/commands/summary.ts:77-91
+- Truncates summary to 4090 chars and adds "... (truncated)" suffix if longer
+- Prevents API errors when AI output exceeds Discord embed description limit
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 2: Add max timeframe limit (7 days)
+- Modified: apps/controller/src/commands/summary.ts:63-74
+- Added MAX_TIMEFRAME_MS constant (7 days)
+- Rejects with friendly error if timeframe exceeds 7 days
+- Prevents timeouts and high costs from summarizing huge history
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 3: Add max prompt size limit (50k characters)
+- Modified: apps/controller/src/commands/summary.ts:76-84
+- Added MAX_PROMPT_SIZE constant (50000)
+- Truncates formatted messages and adds note if exceeds limit
+- Prevents prompts that are too large for AI model context
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 4: Suppress mention pings with allowedMentions
+- Modified: apps/controller/src/commands/summary.ts:102-105
+- Added allowedMentions: { parse: [] } to editReply call
+- Prevents AI output from triggering @everyone, role, or user mentions
+- Phase 2 (High Priority: Safety + UX) now complete
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 1: Sanitize error messages shown to users
+- Modified: apps/controller/src/commands/summary.ts:110-120
+- Replaced error.message with generic user-facing message
+- Error details still captured in Sentry for debugging
+- Prevents leaking provider details or internal information to users
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 2: Add specific error messages for known failure modes
+- Modified: apps/controller/src/commands/summary.ts:48-54, 110-134
+- Added limit validation (1-500 range)
+- Added specific error for missing permissions
+- Added specific error for AI timeout
+- Provides more helpful error messages to users
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 3: Add prompt injection protection in system prompt
+- Modified: apps/controller/src/services/ai.ts:12-17
+- Added instruction to treat messages as untrusted content
+- Prevents AI from following instructions contained in malicious messages
+- Phase 3 (Medium Priority: Error Handling + Security) now complete
+- Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 4, Task 1: Consolidate timeframe validation to single source of truth
+- Modified: apps/controller/src/utils/messages.ts:1-3, apps/controller/src/commands/summary.ts:1-10
+- Exported timeframeSchema from messages.ts to eliminate duplication
+- Removed duplicate Zod schema definition from summary.ts
+- Removed unused 'z' import from summary.ts
+- Single source of truth for timeframe validation
+- Ran lint: passed with only pre-existing warnings
+- Typecheck: passed (pre-existing worker errors unrelated to changes)
+
+[2026-01-22] Phase 4, Task 2: Consider using AbortController for proper timeout handling
+- Modified: apps/controller/src/services/ai.ts:19-32
+- Replaced Promise.race with AbortController for proper timeout handling
+- Added abortSignal to generateText options
+- Timeout now properly aborts the in-flight request to prevent incurring costs
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
+
+[2026-01-22] Phase 5, Task 1: Consider making response ephemeral by default or as option
+- Modified: apps/controller/src/commands/summary.ts:12-29, 30-32
+- Added optional 'ephemeral' boolean parameter to slash command
+- Modified deferReply() to accept ephemeral option
+- Default value is false (public response) for backward compatibility
+- When ephemeral is true, only the user can see the summary
+- Improves privacy by preventing sensitive summaries from being visible to all channel members
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
+- Phase 5 (Future Considerations) - Task 1 complete, Task 2 remaining
+
+[2026-01-22] Phase 1, Task 4: Fix pagination early-break condition (bug)
+- Modified: apps/controller/src/utils/messages.ts:81-91
+- Replaced incorrect early-break condition (filteredMessages.length === 0) with proper checks
+- Now stops only when fetched.size === 0 OR lastMessage.createdTimestamp <= startTime
+- Fixes bug where pagination stopped prematurely when older valid messages still existed
+- Phase 1 (Critical Fixes) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
+
+[2026-01-22] Phase 2, Task 5: Fix prompt truncation direction (keeps wrong end)
+- Modified: apps/controller/src/commands/summary.ts:98-103
+- Changed from slice(0, truncatedLength) to slice(-truncatedLength)
+- Now keeps the most recent messages (from end) instead of earliest messages (from start)
+- Moves truncation notice to beginning: "... (truncated to last messages)\n\n"
+- Fixes bug where "truncated to last messages" suffix was misleading
+- Phase 2 (High Priority: Safety + UX) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
+
+[2026-01-22] Phase 3, Task 4: Fix timeout error detection
+- Modified: apps/controller/src/services/ai.ts:42-50
+- Added check for AbortError and rethrow with stable error message "AI request timeout"
+- Fixes bug where timeout error was never caught because AbortController throws AbortError
+- Phase 3 (Medium Priority: Error Handling + Security) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
+
+[2026-01-22] Phase 4, Task 3: Add validation for zero timeframe
+- Modified: apps/controller/src/utils/messages.ts:4-11
+- Added refinement to timeframeSchema to check totalMs > 0
+- Prevents "0m" from passing validation and always returning no messages
+- Provides clear error message: "Timeframe must be greater than zero"
+- Phase 4 (Low Priority: Code Quality) - Task 3 complete, Task 4 remaining
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
+
+[2026-01-22] Phase 4, Task 4: Remove unused calculateSnowflake() function
+- Modified: apps/controller/src/utils/messages.ts:50-53
+- Removed calculateSnowflake() function that was never called
+- Pagination uses timestamp filtering instead of snowflake IDs
+- Reduces confusion and improves code clarity
+- Phase 4 (Low Priority: Code Quality) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
+
+[2026-01-22] Phase 5, Task 1: Add per-user/channel rate limiting
+- Modified: apps/controller/src/commands/summary.ts:12-26, 47-56
+- Added in-memory rate limiter with 60 second cooldown
+- Keyed by guildId and userId to prevent spam
+- Prevents users from calling /summary command too frequently
+- Returns friendly error message when rate limit is reached
+- Phase 5 (Future Considerations) now complete
+- All review feedback items completed
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed

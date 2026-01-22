@@ -24,6 +24,33 @@ This project follows a controller-worker architecture pattern:
 - **Container Orchestration**: Kubernetes (k3s)
 - **CI/CD**: GitHub Actions
 
+## Discord Bot Commands
+
+Auxbot provides Discord slash commands for various operations:
+
+### /summary
+
+Generate a summary of recent messages in the current channel using AI.
+
+**Usage:**
+
+```
+/summary timeframe: [time period] limit: [optional max messages]
+```
+
+**Parameters:**
+
+- `timeframe` (required): Time period to summarize, using format like `1h`, `30m`, `2d6h`
+- `limit` (optional): Maximum number of messages to include (default: 100, range: 1-500)
+
+**Examples:**
+
+```
+/summary timeframe: 1h
+/summary timeframe: 2d6h limit: 200
+/summary timeframe: 45m limit: 50
+```
+
 ## Repository Structure
 
 ```

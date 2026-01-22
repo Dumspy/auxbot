@@ -2,22 +2,23 @@
 
 ## Build/Lint/Test Commands
 
-- **Build all**: `pnpm build` (or `turbo run build`)
-- **Lint all**: `pnpm lint` (or `turbo run lint`)
-- **Type check**: `pnpm check-types` (or `turbo run check-types`)
-- **Format**: `pnpm format`
-- **Dev mode**: `pnpm dev` (runs all apps with watch mode)
-- **Single app commands**: `cd apps/controller` (or `apps/worker`) then run `pnpm build|lint|check-types|dev`
+- **Build**: `pnpm build` | **Lint**: `pnpm lint` | **Type check**: `pnpm check-types` | **Format**: `pnpm format`
+- **Dev mode**: `pnpm dev` | **Single app**: `pnpm --filter "@auxbot/controller" dev`
 - No test framework currently in use
+
+## Architecture
+
+- **Monorepo**: Turborepo + pnpm workspaces; apps in `apps/`, shared code in `packages/`
+- **Apps**: `controller` (REST API, spawns K8s jobs), `worker` (job processor, runs and exits)
+- **Packages**: `protos` (gRPC/protobuf), `discord` (Discord integration), `sentry`, `eslint-config`, `typescript-config`
+- **Communication**: gRPC via protobuf (see `packages/protos/*.proto`)
 
 ## Code Style
 
-- **Module system**: ESM only (`.js` extensions required on all imports)
-- **TypeScript**: Strict mode enabled, `noUncheckedIndexedAccess: true`, use `NodeNext` module resolution
-- **Formatting**: Prettier with defaults
-- **Imports**: Group by external packages first, then internal workspace packages, then relative imports
-- **Types**: Prefer explicit types, use Zod for runtime validation (see `env.ts` pattern)
-- **Error handling**: Use try-catch, log errors to console, use Sentry's `captureException` with context tags
-- **Naming**: camelCase for variables/functions, PascalCase for classes, UPPER_CASE for env vars
-- **Async**: Prefer async/await over promises chains
+- **ESM only**: Use `.js` extensions on all imports
+- **TypeScript**: Strict mode, `noUncheckedIndexedAccess: true`, `NodeNext` module resolution
+- **Formatting**: Prettier with defaults; group imports: external → workspace → relative
+- **Types**: Prefer explicit types; use Zod for runtime validation (see `env.ts` pattern)
+- **Error handling**: try-catch, console logs, Sentry's `captureException` with context tags
+- **Naming**: camelCase (vars/funcs), PascalCase (classes), UPPER_CASE (env vars)
 - **Comments**: DO NOT add comments unless necessary for complex logic
