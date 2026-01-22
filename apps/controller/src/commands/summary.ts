@@ -47,6 +47,13 @@ registerInteraction({
       const timeframeString = interaction.options.getString("timeframe", true);
       const limit = interaction.options.getInteger("limit") ?? 100;
 
+      if (limit < 1 || limit > 500) {
+        await interaction.editReply(
+          "Limit must be between 1 and 500 messages.",
+        );
+        return;
+      }
+
       const timeframeSchema = z.string().regex(/^\d+[mhd](?:\d+[mhd])*$/i, {
         message: "Invalid timeframe format. Use format like 1h, 30m, 2d6h",
       });
@@ -123,9 +130,18 @@ registerInteraction({
           channelId: interaction.channelId,
         },
       });
-      await interaction.editReply(
-        "Failed to generate summary. Please try again later.",
-      );
+
+      let errorMessage = "Failed to generate summary. Please try again later.";
+
+      if (error?.message?.includes("Missing permissions")) {
+        errorMessage =
+          "I don't have permission to read message history in this channel.";
+      } else if (error?.message?.includes("AI request timeout")) {
+        errorMessage =
+          "AI summarization timed out. Try a smaller timeframe or limit.";
+      }
+
+      await interaction.editReply(errorMessage);
     }
   },
 });

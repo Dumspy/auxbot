@@ -54,3 +54,11 @@
 - Error details still captured in Sentry for debugging
 - Prevents leaking provider details or internal information to users
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 2: Add specific error messages for known failure modes
+- Modified: apps/controller/src/commands/summary.ts:48-54, 110-134
+- Added limit validation (1-500 range)
+- Added specific error for missing permissions
+- Added specific error for AI timeout
+- Provides more helpful error messages to users
+- Ran lint: passed with only pre-existing warnings

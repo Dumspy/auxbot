@@ -54,7 +54,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: `error.message` exposed to users may leak provider details
   - Fix: Use generic user-facing messages, keep details in Sentry only
 
-- [ ] Add specific error messages for known failure modes
+- [x] Add specific error messages for known failure modes
 
   - File: `apps/controller/src/commands/summary.ts`
   - Missing permissions → "I don't have permission to read message history in this channel."
