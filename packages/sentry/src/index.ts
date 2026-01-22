@@ -34,10 +34,7 @@ export function initSentry(options: InitOptions = {}) {
   }
 }
 
-export function captureException(
-  error: Error | unknown,
-  context?: Record<string, any>,
-) {
+export function captureException(error: Error | unknown, context?: Record<string, any>) {
   console.error("Error captured:", error, context ? { context } : "");
 
   if (!env.SENTRY_DSN) {

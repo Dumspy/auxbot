@@ -6,10 +6,7 @@ interface WorkerResources {
   pod: k8s.V1Pod; // Changed from deployment to pod
 }
 
-export function createWorkerResources(
-  guildId: string,
-  channelId: string,
-): WorkerResources {
+export function createWorkerResources(guildId: string, channelId: string): WorkerResources {
   const name = `auxbot-worker-${guildId}`;
 
   // Create the pod instead of deployment

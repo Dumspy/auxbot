@@ -3,6 +3,7 @@ study specs/summary-feature-review-feedback.md and pick the most important task(
 study progress.txt
 
 Format for commit messages:
+
 ```
 type(scope): concise summary in present tense
 

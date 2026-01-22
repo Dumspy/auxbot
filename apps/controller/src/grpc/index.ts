@@ -18,15 +18,11 @@ export async function initGrpc() {
   await loadServices();
 
   const port = env.WORKER_GRPC_PORT;
-  server.bindAsync(
-    `0.0.0.0:${port}`,
-    grpc.ServerCredentials.createInsecure(),
-    (err, port) => {
-      if (err) {
-        console.error("Failed to start gRPC server:", err);
-        return;
-      }
-      console.log(`gRPC server started on port ${port}`);
-    },
-  );
+  server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+    if (err) {
+      console.error("Failed to start gRPC server:", err);
+      return;
+    }
+    console.log(`gRPC server started on port ${port}`);
+  });
 }

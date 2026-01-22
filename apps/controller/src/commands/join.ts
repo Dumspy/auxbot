@@ -20,24 +20,18 @@ registerInteraction({
     try {
       const channel = interaction.options.getChannel("channel");
       if (!channel) {
-        await interaction.editReply(
-          "You need to specify a valid voice channel!",
-        );
+        await interaction.editReply("You need to specify a valid voice channel!");
         return;
       }
 
       if (channel.type !== ChannelType.GuildVoice) {
-        await interaction.editReply(
-          "The specified channel must be a voice channel!",
-        );
+        await interaction.editReply("The specified channel must be a voice channel!");
         return;
       }
 
       const guildId = interaction.guildId;
       if (!guildId) {
-        await interaction.editReply(
-          "This command can only be used in a server!",
-        );
+        await interaction.editReply("This command can only be used in a server!");
         return;
       }
 

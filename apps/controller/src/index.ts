@@ -3,7 +3,6 @@ import { initApp } from "./express.js";
 import { initClient } from "./discord.js";
 import { workerRegistry } from "./k8s.js";
 import { initGrpc } from "./grpc/index.js";
-import { env } from "./env.js";
 
 // Initialize Sentry as early as possible
 initSentry({

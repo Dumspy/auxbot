@@ -38,11 +38,7 @@ export class WorkerRegistry {
   /**
    * Register a new worker
    */
-  async registerWorker(
-    pod: k8s.V1Pod,
-    guildId: string,
-    channelId: string,
-  ): Promise<void> {
+  async registerWorker(pod: k8s.V1Pod, guildId: string, channelId: string): Promise<void> {
     const podName = pod.metadata?.name || "unknown";
 
     // Find the associated service
@@ -53,9 +49,7 @@ export class WorkerRegistry {
 
     const service = services.items[0];
     if (!service) {
-      throw new Error(
-        `No service found for worker ${podName} (guild: ${guildId})`,
-      );
+      throw new Error(`No service found for worker ${podName} (guild: ${guildId})`);
     }
 
     this.workers.set(podName, {
@@ -83,9 +77,7 @@ export class WorkerRegistry {
    * Get all workers for a guild
    */
   getWorkersByGuild(guildId: string): TrackedWorker[] {
-    return Array.from(this.workers.values()).filter(
-      (worker) => worker.guildId === guildId,
-    );
+    return Array.from(this.workers.values()).filter((worker) => worker.guildId === guildId);
   }
 
   /**
@@ -109,7 +101,7 @@ export class WorkerRegistry {
   private startHealthChecks(): void {
     // Check all workers every 30 seconds
     setInterval(async () => {
-      for (const [podName, worker] of this.workers.entries()) {
+      for (const [podName] of this.workers.entries()) {
         await this.checkWorkerHealth(podName);
       }
     }, 30000);
@@ -133,9 +125,7 @@ export class WorkerRegistry {
       worker.healthy = isHealthy;
       worker.lastChecked = new Date();
 
-      console.log(
-        `Health check for worker ${podName}: ${isHealthy ? "HEALTHY" : "UNHEALTHY"}`,
-      );
+      console.log(`Health check for worker ${podName}: ${isHealthy ? "HEALTHY" : "UNHEALTHY"}`);
       return isHealthy;
     } catch (error) {
       console.error(`Error checking health for worker ${podName}:`, error);
@@ -183,9 +173,7 @@ export class WorkerRegistry {
 
           const service = services.items[0];
           if (!service) {
-            console.warn(
-              `No service found for worker ${podName} (guild: ${guildId})`,
-            );
+            console.warn(`No service found for worker ${podName} (guild: ${guildId})`);
             continue;
           }
 
@@ -203,9 +191,7 @@ export class WorkerRegistry {
             `Loaded existing worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`,
           );
         } else {
-          console.warn(
-            `Found worker pod ${podName} without guild ID or channel ID labels`,
-          );
+          console.warn(`Found worker pod ${podName} without guild ID or channel ID labels`);
         }
       }
     } catch (error) {

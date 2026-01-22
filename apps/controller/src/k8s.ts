@@ -16,18 +16,13 @@ export function getK8sApi() {
   return k8sApi;
 }
 
-export async function spawnWorkerPod(
-  guildId: string,
-  channelId: string,
-): Promise<string> {
+export async function spawnWorkerPod(guildId: string, channelId: string): Promise<string> {
   // Check if a worker for this guild already exists
   const existingWorkers = workerRegistry.getWorkersByGuild(guildId);
   if (existingWorkers[0]) {
     // If there's an existing worker, return its pod name
     const existingWorker = existingWorkers[0];
-    console.log(
-      `Using existing worker for guild ${guildId}: ${existingWorker.pod.metadata?.name}`,
-    );
+    console.log(`Using existing worker for guild ${guildId}: ${existingWorker.pod.metadata?.name}`);
     return existingWorker.pod.metadata?.name || "unknown";
   }
 
@@ -41,10 +36,7 @@ export async function spawnWorkerPod(
   });
 
   // Set the owner reference UID from the created pod
-  if (
-    resources.service.metadata?.ownerReferences?.[0] &&
-    workerPod.metadata?.uid
-  ) {
+  if (resources.service.metadata?.ownerReferences?.[0] && workerPod.metadata?.uid) {
     resources.service.metadata.ownerReferences[0].uid = workerPod.metadata.uid;
   } else {
     throw new Error("Failed to set owner reference: missing required metadata");
@@ -57,9 +49,7 @@ export async function spawnWorkerPod(
   });
 
   const podName = workerPod.metadata?.name || "unknown";
-  console.log(
-    `Worker pod created: ${podName} for guild: ${guildId}, channel: ${channelId}`,
-  );
+  console.log(`Worker pod created: ${podName} for guild: ${guildId}, channel: ${channelId}`);
 
   // Register the newly spawned worker in our registry
   workerRegistry.registerWorker(workerPod, guildId, channelId);

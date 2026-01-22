@@ -22,8 +22,7 @@ class Player {
   private volume = 0.5; // 50% volume
   private lastActivityTime: number = Date.now();
   private inactivityCheckInterval: ReturnType<typeof setInterval>;
-  private readonly INACTIVITY_TIMEOUT =
-    parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
+  private readonly INACTIVITY_TIMEOUT = parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
 
   constructor() {
     this.player.on(AudioPlayerStatus.Idle, () => {
@@ -41,16 +40,11 @@ class Player {
     });
 
     this.player.on("stateChange", (oldState, newState) => {
-      console.log(
-        `Player state changed from ${oldState.status} to ${newState.status}`,
-      );
+      console.log(`Player state changed from ${oldState.status} to ${newState.status}`);
       this.updateLastActivity();
     });
 
-    this.inactivityCheckInterval = setInterval(
-      () => this.checkInactivity(),
-      60000,
-    );
+    this.inactivityCheckInterval = setInterval(() => this.checkInactivity(), 60000);
   }
 
   private async gracefulShutdown() {
@@ -98,9 +92,7 @@ class Player {
     }
   }
 
-  private async downloadAndPlayYouTubeAudio(
-    url: string,
-  ): Promise<AudioResource> {
+  private async downloadAndPlayYouTubeAudio(url: string): Promise<AudioResource> {
     // Generate a unique filename in the auxbot temp directory
     const filename = path.join("/tmp/auxbot", `audio-${randomUUID()}.opus`);
 
@@ -178,7 +170,7 @@ class Player {
         resource.playStream.on("close", async () => {
           try {
             await unlink(filename);
-          } catch (e) {
+          } catch {
             console.warn(`Failed to delete temp file: ${filename}`);
           }
         });
@@ -234,9 +226,7 @@ class Player {
     return {
       success: true,
       hasNext: hasNextSong,
-      message: hasNextSong
-        ? "Skipped to next song"
-        : "Skipped current song, queue is now empty",
+      message: hasNextSong ? "Skipped to next song" : "Skipped current song, queue is now empty",
     };
   }
 

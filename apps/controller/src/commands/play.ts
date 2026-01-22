@@ -8,10 +8,7 @@ registerInteraction({
     .setName("play")
     .setDescription("Play a song")
     .addStringOption((option) =>
-      option
-        .setName("song")
-        .setDescription("The url of the song to play")
-        .setRequired(true),
+      option.setName("song").setDescription("The url of the song to play").setRequired(true),
     ) as SlashCommandBuilder,
   async execute(interaction) {
     const songUrl = interaction.options.getString("song", true);
@@ -33,15 +30,11 @@ registerInteraction({
     }
 
     try {
-      const response = await addSong(
-        interaction.guildId,
-        songUrl,
-        interaction.user.id,
-      );
+      const response = await addSong(interaction.guildId, songUrl, interaction.user.id);
       await interaction.reply(
         `Added song: ${response.isPlaying ? "Playing now" : "Added to queue"}`,
       );
-    } catch (error) {
+    } catch {
       await interaction.reply("Failed to add song. Please try again later.");
     }
   },

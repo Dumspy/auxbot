@@ -49,9 +49,7 @@ client.once(Events.ClientReady, async () => {
     }
 
     const channelId = env.DISCORD_CHANNEL_ID;
-    console.log(
-      `Attempting to join voice channel: ${channelId} in guild: ${guild.name}`,
-    );
+    console.log(`Attempting to join voice channel: ${channelId} in guild: ${guild.name}`);
 
     voiceConnection = joinVoiceChannel({
       channelId: channelId,
@@ -74,9 +72,7 @@ client.once(Events.ClientReady, async () => {
 
     // Set up connection state change listener
     voiceConnection.on("stateChange", (oldState, newState) => {
-      console.log(
-        `Voice connection state changed from ${oldState.status} to ${newState.status}`,
-      );
+      console.log(`Voice connection state changed from ${oldState.status} to ${newState.status}`);
       if (newState.status === VoiceConnectionStatus.Disconnected) {
         // Handle disconnection and attempt to reconnect
         try {

@@ -94,11 +94,7 @@ export async function fetchMessagesInRange(
       beforeId = lastMessage?.id;
       retries = 0;
     } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        (error as { code: number }).code === 50001
-      ) {
+      if (error instanceof Error && "code" in error && (error as { code: number }).code === 50001) {
         throw new Error("Missing permissions to read messages");
       }
 

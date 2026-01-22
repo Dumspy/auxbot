@@ -87,9 +87,7 @@ export async function clearQueue(guildId: string): Promise<ClearQueueResponse> {
   });
 }
 
-export async function getQueueStatus(
-  guildId: string,
-): Promise<QueueStatusResponse> {
+export async function getQueueStatus(guildId: string): Promise<QueueStatusResponse> {
   return new Promise((resolve, reject) => {
     const client = createPlayerClient(guildId);
     const request = {};
@@ -149,9 +147,7 @@ export async function resumePlayback(guildId: string): Promise<ResumeResponse> {
   });
 }
 
-export async function getPlayerStatus(
-  guildId: string,
-): Promise<PlayerStatusResponse> {
+export async function getPlayerStatus(guildId: string): Promise<PlayerStatusResponse> {
   return new Promise((resolve, reject) => {
     const client = createPlayerClient(guildId);
     const request = {};

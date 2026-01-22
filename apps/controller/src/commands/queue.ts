@@ -4,9 +4,7 @@ import { getQueueStatus } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
 registerInteraction({
-  data: new SlashCommandBuilder()
-    .setName("queue")
-    .setDescription("Show the current music queue"),
+  data: new SlashCommandBuilder().setName("queue").setDescription("Show the current music queue"),
   async execute(interaction) {
     if (!interaction.guildId) {
       await interaction.reply("This command can only be used in a server.");
@@ -22,9 +20,7 @@ registerInteraction({
     try {
       const response = await getQueueStatus(interaction.guildId);
 
-      const embed = new EmbedBuilder()
-        .setTitle("Music Queue")
-        .setColor("#0099ff");
+      const embed = new EmbedBuilder().setTitle("Music Queue").setColor("#0099ff");
 
       if (response.isPlaying && response.nowPlayingUrl) {
         embed.addFields({
@@ -52,10 +48,8 @@ registerInteraction({
       }
 
       await interaction.reply({ embeds: [embed] });
-    } catch (error) {
-      await interaction.reply(
-        "Failed to get queue information. Please try again later.",
-      );
+    } catch {
+      await interaction.reply("Failed to get queue information. Please try again later.");
     }
   },
 });

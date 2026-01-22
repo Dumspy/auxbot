@@ -4,9 +4,7 @@ import { skipSong } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
 registerInteraction({
-  data: new SlashCommandBuilder()
-    .setName("skip")
-    .setDescription("Skip the current song"),
+  data: new SlashCommandBuilder().setName("skip").setDescription("Skip the current song"),
   async execute(interaction) {
     if (!interaction.guildId) {
       await interaction.reply("This command can only be used in a server.");
@@ -24,11 +22,9 @@ registerInteraction({
       if (response.success) {
         await interaction.reply(response.message);
       } else {
-        await interaction.reply(
-          response.message || "Nothing is currently playing.",
-        );
+        await interaction.reply(response.message || "Nothing is currently playing.");
       }
-    } catch (error) {
+    } catch {
       await interaction.reply("Failed to skip song. Please try again later.");
     }
   },

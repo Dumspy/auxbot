@@ -6,9 +6,10 @@
       "dependsOn": ["generate", "^build"],
       "outputs": ["dist/**"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
+    "//:lint": {},
+    "//:lint:fix": {},
+    "//:format": {},
+    "//:format:fix": {},
     "check-types": {
       "dependsOn": ["^check-types"]
     },
