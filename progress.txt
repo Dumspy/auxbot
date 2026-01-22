@@ -1,0 +1,8 @@
+Phase 1: Dependencies and Configuration - COMPLETED
+
+- Added `ai` package to apps/controller/package.json (version 4.1.47)
+- Added `zhipu-ai-provider` package to apps/controller/package.json (version 0.2.2)
+- Added ZHIPU_API_KEY to environment schema in apps/controller/src/env.ts
+- Installed dependencies with pnpm install
+
+Date: 2026-01-22

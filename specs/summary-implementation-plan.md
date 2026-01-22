@@ -4,13 +4,13 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 1: Dependencies and Configuration
 
-- [ ] Add `ai` package to `apps/controller/package.json`
+- [x] Add `ai` package to `apps/controller/package.json`
   - Source: [Dependencies section](./summary-feature.md#dependencies)
-- [ ] Add `zhipu-ai-provider` package to `apps/controller/package.json`
+- [x] Add `zhipu-ai-provider` package to `apps/controller/package.json`
   - Source: [Dependencies section](./summary-feature.md#dependencies)
-- [ ] Add `ZHIPU_API_KEY` to environment schema in `apps/controller/src/env.ts`
+- [x] Add `ZHIPU_API_KEY` to environment schema in `apps/controller/src/env.ts`
   - Source: [Environment Variables section](./summary-feature.md#environment-variables)
-- [ ] Install dependencies with `pnpm install`
+- [x] Install dependencies with `pnpm install`
   - Source: [README.md build commands](../README.md#development)
 
 ## Phase 2: AI Service
