@@ -10,5 +10,8 @@ Date: 2026-01-22
 Phase 2: AI Service - IN PROGRESS
 
 - Created directory apps/controller/src/services/
+- Created file apps/controller/src/services/ai.ts with Zhipu provider integration
+- Updated ai package to v5.0.0 to match zhipu-ai-provider compatibility
+- Updated zod package to v3.25.76 to satisfy ai package dependencies
 
 Date: 2026-01-22

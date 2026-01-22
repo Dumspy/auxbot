@@ -17,23 +17,23 @@ Implementation checklist for the Discord message summary feature as specified in
 
 - [x] Create directory `apps/controller/src/services/`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Create file `apps/controller/src/services/ai.ts`
+- [x] Create file `apps/controller/src/services/ai.ts`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Import `createZhipu` from `zhipu-ai-provider`
+- [x] Import `createZhipu` from `zhipu-ai-provider`
   - Source: [Provider Configuration section](./summary-feature.md#provider-configuration)
-- [ ] Import `generateText` from `ai`
+- [x] Import `generateText` from `ai`
   - Source: [Provider Configuration section](./summary-feature.md#provider-configuration)
-- [ ] Create Zhipu provider instance with base URL `https://api.z.ai/api/paas/v4`
+- [x] Create Zhipu provider instance with base URL `https://api.z.ai/api/paas/v4`
   - Source: [Provider Configuration section](./summary-feature.md#provider-configuration)
-- [ ] Create `generateSummary()` function that accepts messages and returns summary text
+- [x] Create `generateSummary()` function that accepts messages and returns summary text
   - Source: [AI Integration section](./summary-feature.md#ai-integration)
-- [ ] Implement system prompt for conversation summarization
+- [x] Implement system prompt for conversation summarization
   - Source: [Prompt Engineering section](./summary-feature.md#prompt-engineering)
-- [ ] Implement user prompt with message formatting
+- [x] Implement user prompt with message formatting
   - Source: [Prompt Engineering section](./summary-feature.md#prompt-engineering)
-- [ ] Add error handling with try-catch and Sentry logging
+- [x] Add error handling with try-catch and Sentry logging
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Add 30-second timeout for AI API calls
+- [x] Add 30-second timeout for AI API calls
   - Source: [Performance Considerations section](./summary-feature.md#performance-considerations)
 
 ## Phase 3: Message Utilities
