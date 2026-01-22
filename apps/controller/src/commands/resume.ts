@@ -4,9 +4,7 @@ import { resumePlayback } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
 registerInteraction({
-  data: new SlashCommandBuilder()
-    .setName("resume")
-    .setDescription("Resume the paused playback"),
+  data: new SlashCommandBuilder().setName("resume").setDescription("Resume the paused playback"),
   async execute(interaction) {
     if (!interaction.guildId) {
       await interaction.reply("This command can only be used in a server.");
@@ -24,14 +22,10 @@ registerInteraction({
       if (response.success) {
         await interaction.reply("Playback resumed.");
       } else {
-        await interaction.reply(
-          response.message || "Cannot resume: No paused playback.",
-        );
+        await interaction.reply(response.message || "Cannot resume: No paused playback.");
       }
-    } catch (error) {
-      await interaction.reply(
-        "Failed to resume playback. Please try again later.",
-      );
+    } catch {
+      await interaction.reply("Failed to resume playback. Please try again later.");
     }
   },
 });

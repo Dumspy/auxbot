@@ -1,8 +1,5 @@
 import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
-import {
-  executeCommandHandler,
-  getInteractions,
-} from "@auxbot/discord/interaction";
+import { executeCommandHandler, getInteractions } from "@auxbot/discord/interaction";
 import { env } from "./env.js";
 import * as path from "path";
 import * as fs from "fs";
@@ -13,9 +10,7 @@ const client = new Client({
 
 async function importCommands() {
   const commandsPath = path.join(import.meta.dirname, "commands");
-  const commandsFolder = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".js"));
+  const commandsFolder = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
 
   for (const file of commandsFolder) {
     const filePath = path.join(commandsPath, file);

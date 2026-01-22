@@ -136,9 +136,7 @@ registerService<PlayerService, PlayerServer>(PlayerService, {
 
       callback(null, {
         success,
-        message: success
-          ? "Playback paused"
-          : "Cannot pause: No active playback",
+        message: success ? "Playback paused" : "Cannot pause: No active playback",
       });
     } catch (error) {
       console.error("Error pausing playback:", error);
@@ -157,9 +155,7 @@ registerService<PlayerService, PlayerServer>(PlayerService, {
 
       callback(null, {
         success,
-        message: success
-          ? "Playback resumed"
-          : "Cannot resume: Player is not paused",
+        message: success ? "Playback resumed" : "Cannot resume: Player is not paused",
       });
     } catch (error) {
       console.error("Error resuming playback:", error);

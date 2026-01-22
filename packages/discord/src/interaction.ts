@@ -1,6 +1,5 @@
 import {
   ChatInputCommandInteraction,
-  CommandInteraction,
   Interaction,
   SlashCommandBuilder,
 } from "discord.js";
@@ -23,9 +22,7 @@ export function getInteraction(name: string): AuxInteraction | undefined {
   return interactions.find((interaction) => interaction.data.name === name);
 }
 
-export async function executeCommandHandler(
-  interaction: Interaction,
-): Promise<void> {
+export async function executeCommandHandler(interaction: Interaction): Promise<void> {
   if (!interaction.isChatInputCommand()) {
     console.log("Received a non-chat input command interaction, ignoring");
     return;

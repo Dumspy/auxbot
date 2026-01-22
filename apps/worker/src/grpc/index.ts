@@ -1,11 +1,6 @@
 import * as grpc from "@grpc/grpc-js";
 import { env } from "../env.js";
-import {
-  HealthCheckRequest,
-  HealthCheckResponse,
-  HealthCheckService,
-  HealthCheckResponse_ServingStatus,
-} from "@auxbot/protos/health";
+
 
 const server = new grpc.Server();
 
@@ -26,15 +21,11 @@ export async function initGrpc() {
 
   // Start the server using the port from environment variables
   const port = env.GRPC_PORT;
-  server.bindAsync(
-    `0.0.0.0:${port}`,
-    grpc.ServerCredentials.createInsecure(),
-    (err, port) => {
-      if (err) {
-        console.error("Failed to start gRPC server:", err);
-        return;
-      }
-      console.log(`gRPC server started on port ${port}`);
-    },
-  );
+  server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+    if (err) {
+      console.error("Failed to start gRPC server:", err);
+      return;
+    }
+    console.log(`gRPC server started on port ${port}`);
+  });
 }

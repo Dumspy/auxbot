@@ -4,9 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     SENTRY_DSN: z.string(),
-    NODE_ENV: z
-      .enum(["development", "test", "production"])
-      .default("development"),
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

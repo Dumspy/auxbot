@@ -1,36 +1,34 @@
 {
-    "name": "@auxbot/protos",
-    "type": "module",
-    "scripts": {
-        "build": "tsc",
-        "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated ./*.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,importSuffix=.js"
+  "name": "@auxbot/protos",
+  "type": "module",
+  "exports": {
+    "./health": {
+      "types": "./src/generated/health.ts",
+      "default": "./dist/generated/health.js"
     },
-    "exports": {
-        "./health": {
-            "types": "./src/generated/health.ts",
-            "default": "./dist/generated/health.js"
-        },
-        "./player": {
-            "types": "./src/generated/player.ts",
-            "default": "./dist/generated/player.js"
-        },
-        "./worker_lifecycle": {
-            "types": "./src/generated/worker_lifecycle.ts",
-            "default": "./dist/generated/worker_lifecycle.js"
-        },
-        "./package.json": "./package.json"
+    "./player": {
+      "types": "./src/generated/player.ts",
+      "default": "./dist/generated/player.js"
     },
-    "dependencies": {
-        "@grpc/grpc-js": "^1.13.3",
-        "protobufjs": "^7.5.0"
+    "./worker_lifecycle": {
+      "types": "./src/generated/worker_lifecycle.ts",
+      "default": "./dist/generated/worker_lifecycle.js"
     },
-    "devDependencies": {
-        "@auxbot/eslint-config": "workspace:*",
-        "@auxbot/typescript-config": "workspace:*",
-        "@types/node": "^20.11.0",
-        "eslint": "^9.39.1",
-        "ts-proto": "^1.167.1",
-        "tsx": "^4.7.0",
-        "typescript": "^5.8.2"
-    }
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc",
+    "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated ./*.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,importSuffix=.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.3",
+    "protobufjs": "^7.5.0"
+  },
+  "devDependencies": {
+    "@auxbot/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "ts-proto": "^1.167.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.8.2"
+  }
 }

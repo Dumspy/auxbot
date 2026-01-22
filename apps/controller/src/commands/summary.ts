@@ -43,9 +43,7 @@ registerInteraction({
         .setMaxValue(500),
     )
     .addBooleanOption((option) =>
-      option
-        .setName("ephemeral")
-        .setDescription("Only show the summary to you (default: false)"),
+      option.setName("ephemeral").setDescription("Only show the summary to you (default: false)"),
     ) as SlashCommandBuilder,
   async execute(interaction) {
     const ephemeral = interaction.options.getBoolean("ephemeral") ?? false;
@@ -54,16 +52,12 @@ registerInteraction({
     try {
       const guildId = interaction.guildId;
       if (!guildId) {
-        await interaction.editReply(
-          "This command can only be used in a server!",
-        );
+        await interaction.editReply("This command can only be used in a server!");
         return;
       }
 
       if (!checkRateLimit(guildId, interaction.user.id)) {
-        await interaction.editReply(
-          "Please wait before using this command again.",
-        );
+        await interaction.editReply("Please wait before using this command again.");
         return;
       }
 
@@ -77,18 +71,14 @@ registerInteraction({
       const limit = interaction.options.getInteger("limit") ?? 100;
 
       if (limit < 1 || limit > 500) {
-        await interaction.editReply(
-          "Limit must be between 1 and 500 messages.",
-        );
+        await interaction.editReply("Limit must be between 1 and 500 messages.");
         return;
       }
 
       const timeframeResult = timeframeSchema.safeParse(timeframeString);
       if (!timeframeResult.success) {
         const firstError = timeframeResult.error.errors[0];
-        await interaction.editReply(
-          firstError?.message || "Invalid timeframe format",
-        );
+        await interaction.editReply(firstError?.message || "Invalid timeframe format");
         return;
       }
 
@@ -102,16 +92,10 @@ registerInteraction({
         return;
       }
 
-      const messages = await fetchMessagesInRange(
-        channel,
-        timeframe.totalMs,
-        limit,
-      );
+      const messages = await fetchMessagesInRange(channel, timeframe.totalMs, limit);
 
       if (messages.length === 0) {
-        await interaction.editReply(
-          "No messages found in the specified timeframe.",
-        );
+        await interaction.editReply("No messages found in the specified timeframe.");
         return;
       }
 
@@ -121,16 +105,13 @@ registerInteraction({
       if (formattedMessages.length > MAX_PROMPT_SIZE) {
         const truncatedLength = MAX_PROMPT_SIZE - 50;
         formattedMessages =
-          "... (truncated to last messages)\n\n" +
-          formattedMessages.slice(-truncatedLength);
+          "... (truncated to last messages)\n\n" + formattedMessages.slice(-truncatedLength);
       }
 
       const summary = await generateSummary(formattedMessages);
 
       const truncatedSummary =
-        summary.length > 4096
-          ? summary.slice(0, 4090) + "... (truncated)"
-          : summary;
+        summary.length > 4096 ? summary.slice(0, 4090) + "... (truncated)" : summary;
 
       const embed = new EmbedBuilder()
         .setTitle("Message Summary")
@@ -159,11 +140,9 @@ registerInteraction({
       let errorMessage = "Failed to generate summary. Please try again later.";
 
       if (error?.message?.includes("Missing permissions")) {
-        errorMessage =
-          "I don't have permission to read message history in this channel.";
+        errorMessage = "I don't have permission to read message history in this channel.";
       } else if (error?.message?.includes("AI request timeout")) {
-        errorMessage =
-          "AI summarization timed out. Try a smaller timeframe or limit.";
+        errorMessage = "AI summarization timed out. Try a smaller timeframe or limit.";
       }
 
       await interaction.editReply(errorMessage);

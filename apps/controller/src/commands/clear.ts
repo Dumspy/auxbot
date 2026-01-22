@@ -4,9 +4,7 @@ import { clearQueue } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
 registerInteraction({
-  data: new SlashCommandBuilder()
-    .setName("clear")
-    .setDescription("Clear the music queue"),
+  data: new SlashCommandBuilder().setName("clear").setDescription("Clear the music queue"),
   async execute(interaction) {
     if (!interaction.guildId) {
       await interaction.reply("This command can only be used in a server.");
@@ -24,14 +22,10 @@ registerInteraction({
       if (response.success) {
         await interaction.reply("Queue cleared successfully.");
       } else {
-        await interaction.reply(
-          response.message || "Failed to clear the queue.",
-        );
+        await interaction.reply(response.message || "Failed to clear the queue.");
       }
-    } catch (error) {
-      await interaction.reply(
-        "Failed to clear the queue. Please try again later.",
-      );
+    } catch {
+      await interaction.reply("Failed to clear the queue. Please try again later.");
     }
   },
 });

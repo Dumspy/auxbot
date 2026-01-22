@@ -1,24 +1,22 @@
 {
-    "name": "@auxbot/discord",
-    "type": "module",
-    "scripts": {
-        "build": "tsc"
-    },
-    "exports": {
-        "./interaction": {
-            "types": "./src/interaction.ts",
-            "default": "./dist/interaction.js"
-        }
-    },
-    "dependencies": {
-        "discord.js": "^14.25.1"
-    },
-    "devDependencies": {
-        "@auxbot/eslint-config": "workspace:*",
-        "@auxbot/typescript-config": "workspace:*",
-        "@types/node": "^20.11.0",
-        "eslint": "^9.39.1",
-        "tsx": "^4.7.0",
-        "typescript": "^5.8.2"
+  "name": "@auxbot/discord",
+  "type": "module",
+  "exports": {
+    "./interaction": {
+      "types": "./src/interaction.ts",
+      "default": "./dist/interaction.js"
     }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "discord.js": "^14.25.1"
+  },
+  "devDependencies": {
+    "@auxbot/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.8.2"
+  }
 }
