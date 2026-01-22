@@ -38,8 +38,9 @@ export function captureException(
   error: Error | unknown,
   context?: Record<string, any>,
 ) {
+  console.error("Error captured:", error, context ? { context } : "");
+
   if (!env.SENTRY_DSN) {
-    console.warn("Sentry DSN not provided, error not captured");
     return;
   }
 
