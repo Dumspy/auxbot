@@ -26,3 +26,10 @@
 - Truncates summary to 4090 chars and adds "... (truncated)" suffix if longer
 - Prevents API errors when AI output exceeds Discord embed description limit
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 2: Add max timeframe limit (7 days)
+- Modified: apps/controller/src/commands/summary.ts:63-74
+- Added MAX_TIMEFRAME_MS constant (7 days)
+- Rejects with friendly error if timeframe exceeds 7 days
+- Prevents timeouts and high costs from summarizing huge history
+- Ran lint: passed with only pre-existing warnings

@@ -29,7 +29,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: AI output can exceed Discord embed description limit, causing API error
   - Fix: Truncate summary with `"(Truncated)"` suffix if > 4096 chars
 
-- [ ] Add max timeframe limit (e.g., 7 days)
+- [x] Add max timeframe limit (e.g., 7 days)
 
   - File: `apps/controller/src/commands/summary.ts`
   - Issue: Summarizing huge history causes timeouts and high costs

@@ -60,7 +60,16 @@ registerInteraction({
         return;
       }
 
+      const MAX_TIMEFRAME_MS = 7 * 24 * 60 * 60 * 1000;
       const timeframe = parseTimeframe(timeframeString);
+
+      if (timeframe.totalMs > MAX_TIMEFRAME_MS) {
+        await interaction.editReply(
+          "Timeframe exceeds maximum of 7 days. Please specify a shorter timeframe.",
+        );
+        return;
+      }
+
       const messages = await fetchMessagesInRange(
         channel,
         timeframe.totalMs,
