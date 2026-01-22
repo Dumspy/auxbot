@@ -106,3 +106,13 @@
 - Phase 1 (Critical Fixes) now complete
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: passed
+
+[2026-01-22] Phase 2, Task 5: Fix prompt truncation direction (keeps wrong end)
+- Modified: apps/controller/src/commands/summary.ts:98-103
+- Changed from slice(0, truncatedLength) to slice(-truncatedLength)
+- Now keeps the most recent messages (from end) instead of earliest messages (from start)
+- Moves truncation notice to beginning: "... (truncated to last messages)\n\n"
+- Fixes bug where "truncated to last messages" suffix was misleading
+- Phase 2 (High Priority: Safety + UX) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed

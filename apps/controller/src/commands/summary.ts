@@ -98,8 +98,8 @@ registerInteraction({
       if (formattedMessages.length > MAX_PROMPT_SIZE) {
         const truncatedLength = MAX_PROMPT_SIZE - 50;
         formattedMessages =
-          formattedMessages.slice(0, truncatedLength) +
-          "\n\n... (truncated to last messages)";
+          "... (truncated to last messages)\n\n" +
+          formattedMessages.slice(-truncatedLength);
       }
 
       const summary = await generateSummary(formattedMessages);
