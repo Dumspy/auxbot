@@ -19,7 +19,7 @@ ${messages}`;
   try {
     const result = (await Promise.race([
       generateText({
-        model: zhipu("glm-4-plus"),
+        model: zhipu("glm-4.7-flash"),
         system: systemPrompt,
         prompt: userPrompt,
       }),
