@@ -9,6 +9,22 @@ import {
   timeframeSchema,
 } from "../utils/messages.js";
 
+const rateLimitMap = new Map<string, number>();
+const RATE_LIMIT_COOLDOWN = 60 * 1000;
+
+function checkRateLimit(guildId: string, userId: string): boolean {
+  const key = `${guildId}:${userId}`;
+  const now = Date.now();
+  const lastRequest = rateLimitMap.get(key);
+
+  if (lastRequest && now - lastRequest < RATE_LIMIT_COOLDOWN) {
+    return false;
+  }
+
+  rateLimitMap.set(key, now);
+  return true;
+}
+
 registerInteraction({
   data: new SlashCommandBuilder()
     .setName("summary")
@@ -40,6 +56,13 @@ registerInteraction({
       if (!guildId) {
         await interaction.editReply(
           "This command can only be used in a server!",
+        );
+        return;
+      }
+
+      if (!checkRateLimit(guildId, interaction.user.id)) {
+        await interaction.editReply(
+          "Please wait before using this command again.",
         );
         return;
       }

@@ -121,26 +121,15 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
 
 ## Phase 5: Future Considerations (Optional)
 
-- [ ] Add per-user/channel rate limiting
+- [x] Add per-user/channel rate limiting
   - Issue: Command is trivially spammable without rate limits
   - Fix: Lightweight in-memory rate limiter keyed by `(guildId, userId)` with short TTL
+  - **Completed**: Added 60-second cooldown with Map-based tracking
 
 ---
 
-**Remaining Effort Estimates:**
-
-- Phase 1 remaining: ~30 minutes (pagination fix)
-- Phase 2 remaining: ~15 minutes (truncation direction)
-- Phase 3 remaining: ~15 minutes (timeout error detection)
-- Phase 4 remaining: ~5 minutes (cleanup - remove unused calculateSnowflake)
-- Phase 5 (Future): 1-2 days if implemented
-
-**Total Remaining Fixes:** ~1.5 hours (excluding Phase 5)
-
----
-
-**Status:** Most items complete, 3 remaining issues (1 cleanup, 1 future)
+**Status:** All items complete
 **Created:** 2026-01-22
-**Updated:** 2026-01-22 (re-review + zero timeframe fix)
+**Updated:** 2026-01-22 (rate limiting implemented - all tasks complete)
 **Source:** Oracle code review of `summary-ralph` branch
 **Related:** [summary-implementation-plan.md](./summary-implementation-plan.md)

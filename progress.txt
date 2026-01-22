@@ -142,3 +142,14 @@
 - Phase 4 (Low Priority: Code Quality) now complete
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: passed
+
+[2026-01-22] Phase 5, Task 1: Add per-user/channel rate limiting
+- Modified: apps/controller/src/commands/summary.ts:12-26, 47-56
+- Added in-memory rate limiter with 60 second cooldown
+- Keyed by guildId and userId to prevent spam
+- Prevents users from calling /summary command too frequently
+- Returns friendly error message when rate limit is reached
+- Phase 5 (Future Considerations) now complete
+- All review feedback items completed
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
