@@ -6,8 +6,8 @@ import {
   parseTimeframe,
   fetchMessagesInRange,
   formatMessages,
+  timeframeSchema,
 } from "../utils/messages.js";
-import { z } from "zod";
 
 registerInteraction({
   data: new SlashCommandBuilder()
@@ -53,10 +53,6 @@ registerInteraction({
         );
         return;
       }
-
-      const timeframeSchema = z.string().regex(/^\d+[mhd](?:\d+[mhd])*$/i, {
-        message: "Invalid timeframe format. Use format like 1h, 30m, 2d6h",
-      });
 
       const timeframeResult = timeframeSchema.safeParse(timeframeString);
       if (!timeframeResult.success) {

@@ -69,7 +69,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
 
 ## Phase 4: Low Priority (Code Quality)
 
-- [ ] Consolidate timeframe validation to single source of truth
+- [x] Consolidate timeframe validation to single source of truth
 
   - Files: `apps/controller/src/commands/summary.ts`, `apps/controller/src/utils/messages.ts`
   - Issue: Timeframe validated twice (Zod regex + parseTimeframe)

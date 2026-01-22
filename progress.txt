@@ -69,3 +69,12 @@
 - Prevents AI from following instructions contained in malicious messages
 - Phase 3 (Medium Priority: Error Handling + Security) now complete
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 4, Task 1: Consolidate timeframe validation to single source of truth
+- Modified: apps/controller/src/utils/messages.ts:1-3, apps/controller/src/commands/summary.ts:1-10
+- Exported timeframeSchema from messages.ts to eliminate duplication
+- Removed duplicate Zod schema definition from summary.ts
+- Removed unused 'z' import from summary.ts
+- Single source of truth for timeframe validation
+- Ran lint: passed with only pre-existing warnings
+- Typecheck: passed (pre-existing worker errors unrelated to changes)
