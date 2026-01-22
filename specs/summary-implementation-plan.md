@@ -123,19 +123,19 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 5: Error Handling and Validation
 
-- [ ] Implement input validation for timeframe format
+- [x] Implement input validation for timeframe format
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Implement input validation for limit range
+- [x] Implement input validation for limit range
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Handle Discord API rate limit errors
+- [x] Handle Discord API rate limit errors
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Handle missing permissions errors
+- [x] Handle missing permissions errors
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Handle AI API errors (invalid key, rate limit, model unavailable)
+- [x] Handle AI API errors (invalid key, rate limit, model unavailable)
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Handle timeout errors (> 30 seconds)
+- [x] Handle timeout errors (> 30 seconds)
   - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Log all errors to Sentry with appropriate context
+- [x] Log all errors to Sentry with appropriate context
   - Source: Pattern from existing commands (e.g., `join.ts`)
 
 ## Phase 6: Testing
