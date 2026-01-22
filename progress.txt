@@ -12,3 +12,11 @@
 - Added messages.reverse() to maintain chronological order
 - Stops correctly when < 100 messages returned or timeframe exceeded
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 1, Task 3: Added max retry count to rate limit handling
+- Modified: apps/controller/src/utils/messages.ts:44-97
+- Added maxRetries constant (5) and retries counter
+- Throws error after max retries exceeded instead of retrying forever
+- Resets retry counter on successful fetch
+- Ran lint: passed with only pre-existing warnings
+- Phase 1 (Critical Fixes) now complete

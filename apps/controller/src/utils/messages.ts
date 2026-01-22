@@ -50,8 +50,10 @@ export async function fetchMessagesInRange(
   const messages: Message<boolean>[] = [];
   const endTime = Date.now();
   const startTime = endTime - timeframeMs;
+  const maxRetries = 5;
 
   let beforeId: string | undefined;
+  let retries = 0;
 
   while (messages.length < limit) {
     try {
@@ -84,6 +86,7 @@ export async function fetchMessagesInRange(
       }
 
       beforeId = fetched.last()?.id;
+      retries = 0;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -91,6 +94,11 @@ export async function fetchMessagesInRange(
         (error as { code: number }).code === 50001
       ) {
         throw new Error("Missing permissions to read messages");
+      }
+
+      retries++;
+      if (retries >= maxRetries) {
+        throw new Error(`Failed to fetch messages after ${maxRetries} retries`);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));

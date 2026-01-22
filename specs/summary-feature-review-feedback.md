@@ -16,7 +16,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: Fetching with `after:` is error-prone (ordering, duplicates, missing chunks)
   - Fix: Start from now, fetch `before: lastId` in 100-sized pages, stop when `createdTimestamp < startTime`
 
-- [ ] Add max retry count to rate limit handling
+- [x] Add max retry count to rate limit handling
   - File: `apps/controller/src/utils/messages.ts`
   - Issue: Current implementation can retry forever if errors persist
   - Fix: Add `maxRetries` counter (e.g., 5) and throw after exhausted
