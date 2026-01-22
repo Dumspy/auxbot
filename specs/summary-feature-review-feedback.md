@@ -53,7 +53,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: AI output could contain `@everyone`, role mentions, or user mentions
   - Fix: Add `allowedMentions: { parse: [] }` to `editReply()` call
 
-- [ ] **Fix prompt truncation direction (keeps wrong end)**
+- [x] **Fix prompt truncation direction (keeps wrong end)**
   - File: `apps/controller/src/commands/summary.ts:89-92`
   - Issue: Current truncation keeps earliest messages, not most recent (contradicts "last messages" suffix)
   - Fix: Slice from end: `"...(truncated)\n\n" + formattedMessages.slice(-truncatedLength)`
