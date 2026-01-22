@@ -12,6 +12,7 @@ export const env = createEnv({
     INACTIVITY_TIMEOUT_MINUTES: z.string().default("20"),
     SENTRY_DSN: z.string(),
     ZHIPU_API_KEY: z.string(),
+    ZHIPU_MODEL: z.string().default("glm-4.7"),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   },
   runtimeEnv: process.env,

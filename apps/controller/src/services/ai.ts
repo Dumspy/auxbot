@@ -24,7 +24,7 @@ export async function generateSummary(messages: string): Promise<string> {
   console.log("[AI] Starting generateSummary", {
     messageCount,
     promptLength,
-    model: "glm-4.7-flash",
+    model: env.ZHIPU_MODEL,
   });
 
   try {
@@ -39,7 +39,7 @@ export async function generateSummary(messages: string): Promise<string> {
     }, 30000);
 
     const result = await generateText({
-      model: zhipu("glm-4.7-flash"),
+      model: zhipu(env.ZHIPU_MODEL),
       system: systemPrompt,
       prompt: userPrompt,
       abortSignal: controller.signal,
