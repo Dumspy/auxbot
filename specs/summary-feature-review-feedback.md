@@ -113,10 +113,11 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Fix: Add `totalMs > 0` check in schema refinement or parseTimeframe
   - **Completed**: Added refinement to timeframeSchema to check totalMs > 0
 
-- [ ] Remove unused `calculateSnowflake()` function
+- [x] Remove unused `calculateSnowflake()` function
   - File: `apps/controller/src/utils/messages.ts`
   - Issue: Function exists but is never called (pagination uses timestamp filtering instead)
   - Fix: Remove to reduce confusion, or use it in pagination if preferred
+  - **Completed**: Removed calculateSnowflake() function from messages.ts
 
 ## Phase 5: Future Considerations (Optional)
 

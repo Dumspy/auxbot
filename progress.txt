@@ -133,3 +133,12 @@
 - Phase 4 (Low Priority: Code Quality) - Task 3 complete, Task 4 remaining
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: passed
+
+[2026-01-22] Phase 4, Task 4: Remove unused calculateSnowflake() function
+- Modified: apps/controller/src/utils/messages.ts:50-53
+- Removed calculateSnowflake() function that was never called
+- Pagination uses timestamp filtering instead of snowflake IDs
+- Reduces confusion and improves code clarity
+- Phase 4 (Low Priority: Code Quality) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed

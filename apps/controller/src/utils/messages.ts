@@ -47,11 +47,6 @@ export function parseTimeframe(timeframe: string): ParsedTimeframe {
   return { totalMs, units };
 }
 
-export function calculateSnowflake(timestamp: number): string {
-  const DISCORD_EPOCH = 1420070400000n;
-  return ((BigInt(timestamp) - DISCORD_EPOCH) << 22n).toString();
-}
-
 export async function fetchMessagesInRange(
   channel: TextBasedChannel,
   timeframeMs: number,
