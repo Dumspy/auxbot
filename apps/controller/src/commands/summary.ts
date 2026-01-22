@@ -25,9 +25,15 @@ registerInteraction({
         .setDescription("Maximum number of messages to include (default: 100)")
         .setMinValue(1)
         .setMaxValue(500),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("ephemeral")
+        .setDescription("Only show the summary to you (default: false)"),
     ) as SlashCommandBuilder,
   async execute(interaction) {
-    await interaction.deferReply();
+    const ephemeral = interaction.options.getBoolean("ephemeral") ?? false;
+    await interaction.deferReply({ ephemeral });
 
     try {
       const guildId = interaction.guildId;

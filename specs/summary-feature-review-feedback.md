@@ -81,10 +81,11 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: `Promise.race` doesn't abort the in-flight request; may still incur costs
   - Fix: Use `AbortController` if supported by AI SDK
 
-- [ ] Consider making response ephemeral by default or as option
+- [x] Consider making response ephemeral by default or as option
   - File: `apps/controller/src/commands/summary.ts`
   - Issue: Summarized content visible to all channel members
   - Fix: Add optional `ephemeral` parameter or default to ephemeral
+  - **Completed**: Added optional `ephemeral` boolean parameter (default: false)
 
 ## Phase 5: Future Considerations (Optional)
 

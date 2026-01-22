@@ -86,3 +86,14 @@
 - Timeout now properly aborts the in-flight request to prevent incurring costs
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
+
+[2026-01-22] Phase 5, Task 1: Consider making response ephemeral by default or as option
+- Modified: apps/controller/src/commands/summary.ts:12-29, 30-32
+- Added optional 'ephemeral' boolean parameter to slash command
+- Modified deferReply() to accept ephemeral option
+- Default value is false (public response) for backward compatibility
+- When ephemeral is true, only the user can see the summary
+- Improves privacy by preventing sensitive summaries from being visible to all channel members
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
+- Phase 5 (Future Considerations) - Task 1 complete, Task 2 remaining
