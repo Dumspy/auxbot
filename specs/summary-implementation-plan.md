@@ -69,11 +69,56 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 4: Summary Command
 
-- [ ] Create file `apps/controller/src/commands/summary.ts`
+- [x] Create file `apps/controller/src/commands/summary.ts`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Import `registerInteraction` from `@auxbot/discord/interaction`
+- [x] Import `registerInteraction` from `@auxbot/discord/interaction`
   - Source: Pattern from existing commands (e.g., `play.ts`)
-- [ ] Import `SlashCommandBuilder`, `EmbedBuilder` from `discord.js`
+- [x] Import `SlashCommandBuilder`, `EmbedBuilder` from `discord.js`
+  - Source: Pattern from existing commands (e.g., `queue.ts`)
+- [x] Import `captureException` from `@auxbot/sentry`
+  - Source: Pattern from existing commands (e.g., `join.ts`)
+- [x] Import AI service functions
+  - Source: [Component Structure section](./summary-feature.md#component-structure)
+- [x] Import message utility functions
+  - Source: [Component Structure section](./summary-feature.md#component-structure)
+- [x] Create slash command with name `summary`
+  - Source: [API Design section](./summary-feature.md#api-design)
+- [x] Add required `timeframe` string option
+  - Source: [API Design section](./summary-feature.md#api-design)
+- [x] Add optional `limit` integer option (default: 100, min: 1, max: 500)
+  - Source: [API Design section](./summary-feature.md#api-design)
+- [x] Implement `execute()` handler
+  - Source: [API Design section](./summary-feature.md#api-design)
+- [x] Validate guild context exists
+  - Source: [Error Handling section](./summary-feature.md#error-handling)
+- [x] Validate channel context exists
+  - Source: [Error Handling section](./summary-feature.md#error-handling)
+- [x] Validate timeframe format using Zod
+  - Source: [Error Handling section](./summary-feature.md#error-handling)
+- [x] Validate limit is within range
+  - Source: [Error Handling section](./summary-feature.md#error-handling)
+- [x] Call `interaction.deferReply()` for long operations
+  - Source: Pattern from existing commands (e.g., `join.ts`)
+- [x] Parse timeframe using utility function
+  - Source: [Data Flow section](./summary-feature.md#data-flow)
+- [x] Fetch messages using utility function
+  - Source: [Data Flow section](./summary-feature.md#data-flow)
+- [x] Format messages using utility function
+  - Source: [Data Flow section](./summary-feature.md#data-flow)
+- [x] Call AI service to generate summary
+  - Source: [Data Flow section](./summary-feature.md#data-flow)
+- [x] Handle no messages found case
+  - Source: [Error Response Messages section](./summary-feature.md#error-response-messages)
+- [x] Create Discord embed with summary
+  - Source: [Embed Format section](./summary-feature.md#embed-format)
+- [x] Include channel name, timeframe, message count
+  - Source: [Embed Format section](./summary-feature.md#embed-format)
+- [x] Send reply with embed
+  - Source: [API Design section](./summary-feature.md#api-design)
+- [x] Wrap in try-catch with Sentry error logging
+  - Source: Pattern from existing commands (e.g., `join.ts`)
+- [x] Provide user-friendly error messages
+  - Source: [Error Response Messages section](./summary-feature.md#error-response-messages)
   - Source: Pattern from existing commands (e.g., `queue.ts`)
 - [ ] Import `captureException` from `@auxbot/sentry`
   - Source: Pattern from existing commands (e.g., `join.ts`)

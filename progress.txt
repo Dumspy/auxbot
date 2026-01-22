@@ -26,3 +26,16 @@ Phase 3: Message Utilities - COMPLETED
 - Implemented formatMessages() function to format messages for AI processing
 
 Date: 2026-01-22
+
+Phase 4: Summary Command - IN PROGRESS
+
+- Created file apps/controller/src/commands/summary.ts with basic command structure and imports
+- Set up slash command with name 'summary' and required 'timeframe' option
+- Added optional 'limit' option with default 100, min 1, max 500
+- Implemented execute() handler with guild/channel validation
+- Added Zod schema validation for timeframe format
+- Integrated AI service, message utilities, and Sentry error logging
+- Added Discord embed response with channel, timeframe, and message count
+- Fixed TypeScript strict mode compliance (checked error array access)
+
+Date: 2026-01-22
