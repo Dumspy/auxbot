@@ -20,3 +20,9 @@
 - Resets retry counter on successful fetch
 - Ran lint: passed with only pre-existing warnings
 - Phase 1 (Critical Fixes) now complete
+
+[2026-01-22] Phase 2, Task 1: Cap embed description to Discord's 4096 character limit
+- Modified: apps/controller/src/commands/summary.ts:77-91
+- Truncates summary to 4090 chars and adds "... (truncated)" suffix if longer
+- Prevents API errors when AI output exceeds Discord embed description limit
+- Ran lint: passed with only pre-existing warnings

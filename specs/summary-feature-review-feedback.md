@@ -23,7 +23,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
 
 ## Phase 2: High Priority (Safety + UX)
 
-- [ ] Cap embed description to Discord's 4096 character limit
+- [x] Cap embed description to Discord's 4096 character limit
 
   - File: `apps/controller/src/commands/summary.ts`
   - Issue: AI output can exceed Discord embed description limit, causing API error

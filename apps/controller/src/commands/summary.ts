@@ -77,9 +77,14 @@ registerInteraction({
       const formattedMessages = formatMessages(messages);
       const summary = await generateSummary(formattedMessages);
 
+      const truncatedSummary =
+        summary.length > 4096
+          ? summary.slice(0, 4090) + "... (truncated)"
+          : summary;
+
       const embed = new EmbedBuilder()
         .setTitle("Message Summary")
-        .setDescription(summary)
+        .setDescription(truncatedSummary)
         .addFields(
           { name: "Channel", value: `<#${channel.id}>`, inline: true },
           { name: "Timeframe", value: timeframeString, inline: true },
