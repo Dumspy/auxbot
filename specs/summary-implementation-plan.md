@@ -120,50 +120,6 @@ Implementation checklist for the Discord message summary feature as specified in
 - [x] Provide user-friendly error messages
   - Source: [Error Response Messages section](./summary-feature.md#error-response-messages)
   - Source: Pattern from existing commands (e.g., `queue.ts`)
-- [ ] Import `captureException` from `@auxbot/sentry`
-  - Source: Pattern from existing commands (e.g., `join.ts`)
-- [ ] Import AI service functions
-  - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Import message utility functions
-  - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Create slash command with name `summary`
-  - Source: [API Design section](./summary-feature.md#api-design)
-- [ ] Add required `timeframe` string option
-  - Source: [API Design section](./summary-feature.md#api-design)
-- [ ] Add optional `limit` integer option (default: 100, min: 1, max: 500)
-  - Source: [API Design section](./summary-feature.md#api-design)
-- [ ] Implement `execute()` handler
-  - Source: [API Design section](./summary-feature.md#api-design)
-- [ ] Validate guild context exists
-  - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Validate channel context exists
-  - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Validate timeframe format using Zod
-  - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Validate limit is within range
-  - Source: [Error Handling section](./summary-feature.md#error-handling)
-- [ ] Call `interaction.deferReply()` for long operations
-  - Source: Pattern from existing commands (e.g., `join.ts`)
-- [ ] Parse timeframe using utility function
-  - Source: [Data Flow section](./summary-feature.md#data-flow)
-- [ ] Fetch messages using utility function
-  - Source: [Data Flow section](./summary-feature.md#data-flow)
-- [ ] Format messages using utility function
-  - Source: [Data Flow section](./summary-feature.md#data-flow)
-- [ ] Call AI service to generate summary
-  - Source: [Data Flow section](./summary-feature.md#data-flow)
-- [ ] Handle no messages found case
-  - Source: [Error Response Messages section](./summary-feature.md#error-response-messages)
-- [ ] Create Discord embed with summary
-  - Source: [Embed Format section](./summary-feature.md#embed-format)
-- [ ] Include channel name, timeframe, message count
-  - Source: [Embed Format section](./summary-feature.md#embed-format)
-- [ ] Send reply with embed
-  - Source: [API Design section](./summary-feature.md#api-design)
-- [ ] Wrap in try-catch with Sentry error logging
-  - Source: Pattern from existing commands (e.g., `join.ts`)
-- [ ] Provide user-friendly error messages
-  - Source: [Error Response Messages section](./summary-feature.md#error-response-messages)
 
 ## Phase 5: Error Handling and Validation
 
@@ -209,19 +165,19 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 7: Quality Assurance
 
-- [ ] Run lint: `pnpm lint`
+- [x] Run lint: `pnpm lint`
   - Source: [README.md build commands](../README.md#buildlinttest-commands)
-- [ ] Run typecheck: `pnpm check-types`
+- [x] Run typecheck: `pnpm check-types`
   - Source: [README.md build commands](../README.md#buildlinttest-commands)
-- [ ] Run format: `pnpm format`
+- [x] Run format: `pnpm format`
   - Source: [README.md build commands](../README.md#buildlinttest-commands)
-- [ ] Verify ESM imports use `.js` extensions
+- [x] Verify ESM imports use `.js` extensions
   - Source: [Code Style - ESM only](../AGENTS.md#code-style)
-- [ ] Verify TypeScript strict mode compliance
+- [x] Verify TypeScript strict mode compliance
   - Source: [Code Style - TypeScript](../AGENTS.md#code-style)
-- [ ] Verify no comments added (unless necessary)
+- [x] Verify no comments added (unless necessary)
   - Source: [Code Style - Comments](../AGENTS.md#code-style)
-- [ ] Verify Sentry error logging implemented
+- [x] Verify Sentry error logging implemented
   - Source: [Error handling pattern](../AGENTS.md#error-handling)
 
 ## Phase 8: Documentation

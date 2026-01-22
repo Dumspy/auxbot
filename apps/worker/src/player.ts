@@ -1,4 +1,10 @@
-import { AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, StreamType } from "@discordjs/voice";
+import {
+  AudioPlayerStatus,
+  AudioResource,
+  createAudioPlayer,
+  createAudioResource,
+  StreamType,
+} from "@discordjs/voice";
 import { spawn } from "child_process";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -8,41 +14,47 @@ import { queue } from "./queue.js";
 import { env } from "./env.js";
 import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 import { getVoiceConnection } from "./index.js";
-import { captureException } from '@auxbot/sentry';
+import { captureException } from "@auxbot/sentry";
 
 class Player {
   private player = createAudioPlayer();
-  private currentSong: { url: string, requesterId: string } | null = null;
+  private currentSong: { url: string; requesterId: string } | null = null;
   private volume = 0.5; // 50% volume
   private lastActivityTime: number = Date.now();
   private inactivityCheckInterval: ReturnType<typeof setInterval>;
-  private readonly INACTIVITY_TIMEOUT = parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
+  private readonly INACTIVITY_TIMEOUT =
+    parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
 
   constructor() {
     this.player.on(AudioPlayerStatus.Idle, () => {
-      console.log('Player is idle');
+      console.log("Player is idle");
       this.playNext();
     });
 
-    this.player.on('error', error => {
+    this.player.on("error", (error) => {
       captureException(error, {
         tags: {
-          function: 'player.on error',
+          function: "player.on error",
         },
       });
       this.playNext();
     });
-          
-    this.player.on('stateChange', (oldState, newState) => {
-      console.log(`Player state changed from ${oldState.status} to ${newState.status}`);
+
+    this.player.on("stateChange", (oldState, newState) => {
+      console.log(
+        `Player state changed from ${oldState.status} to ${newState.status}`,
+      );
       this.updateLastActivity();
     });
 
-    this.inactivityCheckInterval = setInterval(() => this.checkInactivity(), 60000);
+    this.inactivityCheckInterval = setInterval(
+      () => this.checkInactivity(),
+      60000,
+    );
   }
 
   private async gracefulShutdown() {
-    console.log('Performing graceful shutdown...');
+    console.log("Performing graceful shutdown...");
     try {
       // Stop any current playback and clear interval
       clearInterval(this.inactivityCheckInterval);
@@ -51,19 +63,19 @@ class Player {
       // Disconnect from voice channel first
       const connection = getVoiceConnection();
       if (connection) {
-        console.log('Disconnecting from voice channel...');
+        console.log("Disconnecting from voice channel...");
         connection.destroy();
       }
 
       // Wait a moment for the voice connection to fully close
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Now notify controller about shutdown
-      await notifyShutdown('inactivity_timeout');
+      await notifyShutdown("inactivity_timeout");
     } catch (error) {
       captureException(error, {
         tags: {
-          function: 'gracefulShutdown',
+          function: "gracefulShutdown",
         },
       });
     } finally {
@@ -77,19 +89,20 @@ class Player {
 
   private async checkInactivity() {
     const timeSinceLastActivity = Date.now() - this.lastActivityTime;
-    if (timeSinceLastActivity >= this.INACTIVITY_TIMEOUT && 
-        this.player.state.status !== AudioPlayerStatus.Playing) {
-      console.log('Shutting down due to inactivity');
+    if (
+      timeSinceLastActivity >= this.INACTIVITY_TIMEOUT &&
+      this.player.state.status !== AudioPlayerStatus.Playing
+    ) {
+      console.log("Shutting down due to inactivity");
       await this.gracefulShutdown();
     }
   }
 
-  private async downloadAndPlayYouTubeAudio(url: string): Promise<AudioResource> {
+  private async downloadAndPlayYouTubeAudio(
+    url: string,
+  ): Promise<AudioResource> {
     // Generate a unique filename in the auxbot temp directory
-    const filename = path.join(
-      "/tmp/auxbot",
-      `audio-${randomUUID()}.opus`
-    );
+    const filename = path.join("/tmp/auxbot", `audio-${randomUUID()}.opus`);
 
     return new Promise((resolve, reject) => {
       // yt-dlp command to download and convert audio
@@ -113,7 +126,7 @@ class Player {
       ytDlp.on("error", (error) => {
         captureException(error, {
           tags: {
-            function: 'downloadAndPlayYouTubeAudio',
+            function: "downloadAndPlayYouTubeAudio",
             url,
           },
         });
@@ -128,7 +141,7 @@ class Player {
         if (code !== 0 && code !== null) {
           captureException(new Error(`yt-dlp exited with code ${code}`), {
             tags: {
-              function: 'downloadAndPlayYouTubeAudio',
+              function: "downloadAndPlayYouTubeAudio",
               url,
               code,
             },
@@ -141,7 +154,7 @@ class Player {
         if (!existsSync(filename)) {
           captureException(new Error("Audio file was not created."), {
             tags: {
-              function: 'downloadAndPlayYouTubeAudio',
+              function: "downloadAndPlayYouTubeAudio",
               url,
             },
           });
@@ -184,7 +197,7 @@ class Player {
     if (!song) {
       queue.playing = false;
       this.currentSong = null;
-      console.log('No song to play');
+      console.log("No song to play");
       return;
     }
     console.log(`Now playing: ${song.url}`);
@@ -203,35 +216,37 @@ class Player {
       return {
         success: false,
         hasNext: false,
-        message: 'Nothing is currently playing'
+        message: "Nothing is currently playing",
       };
     }
-    
+
     const hasNextSong = queue.queue.length > 0;
-    
+
     this.player.stop();
-    
+
     if (hasNextSong) {
       setTimeout(() => this.playNext(), 0);
     } else {
       queue.playing = false;
       this.currentSong = null;
     }
-    
+
     return {
       success: true,
       hasNext: hasNextSong,
-      message: hasNextSong ? 'Skipped to next song' : 'Skipped current song, queue is now empty'
+      message: hasNextSong
+        ? "Skipped to next song"
+        : "Skipped current song, queue is now empty",
     };
   }
 
   pausePlayback(): boolean {
     if (this.player.state.status === AudioPlayerStatus.Playing) {
       this.player.pause();
-      console.log('Playback paused');
+      console.log("Playback paused");
       return true;
     } else {
-      console.log('Cannot pause: Player is not playing');
+      console.log("Cannot pause: Player is not playing");
       return false;
     }
   }
@@ -239,10 +254,10 @@ class Player {
   resumePlayback(): boolean {
     if (this.player.state.status === AudioPlayerStatus.Paused) {
       this.player.unpause();
-      console.log('Playback resumed');
+      console.log("Playback resumed");
       return true;
     } else {
-      console.log('Cannot resume: Player is not paused');
+      console.log("Cannot resume: Player is not paused");
       return false;
     }
   }
@@ -252,7 +267,7 @@ class Player {
       status: this.player.state.status,
       currentSong: this.currentSong,
       hasQueue: queue.queue.length > 0,
-      queueLength: queue.queue.length
+      queueLength: queue.queue.length,
     };
   }
 

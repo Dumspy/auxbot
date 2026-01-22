@@ -1,10 +1,10 @@
-import * as k8s from '@kubernetes/client-node';
-import { env } from '../env.js';
-import { checkWorkerHealth } from '../grpc/client/health.js';
+import * as k8s from "@kubernetes/client-node";
+import { env } from "../env.js";
+import { checkWorkerHealth } from "../grpc/client/health.js";
 
 // Interface to represent a tracked worker
 interface TrackedWorker {
-  pod: k8s.V1Pod;  // Changed from deployment to pod
+  pod: k8s.V1Pod; // Changed from deployment to pod
   service: k8s.V1Service;
   guildId: string;
   channelId: string;
@@ -20,34 +20,42 @@ export class WorkerRegistry {
     const kc = new k8s.KubeConfig();
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-    
+
     // Load existing workers on startup
-    this.loadExistingWorkers().then(() => {
-      console.log('Loaded existing workers');
-      // Start periodic health checks
-      this.startHealthChecks();
-    }).catch(error => {
-      console.error('Failed to load existing workers:', error);
-      // Start periodic health checks anyway
-      this.startHealthChecks();
-    });
+    this.loadExistingWorkers()
+      .then(() => {
+        console.log("Loaded existing workers");
+        // Start periodic health checks
+        this.startHealthChecks();
+      })
+      .catch((error) => {
+        console.error("Failed to load existing workers:", error);
+        // Start periodic health checks anyway
+        this.startHealthChecks();
+      });
   }
 
   /**
    * Register a new worker
    */
-  async registerWorker(pod: k8s.V1Pod, guildId: string, channelId: string): Promise<void> {
-    const podName = pod.metadata?.name || 'unknown';
+  async registerWorker(
+    pod: k8s.V1Pod,
+    guildId: string,
+    channelId: string,
+  ): Promise<void> {
+    const podName = pod.metadata?.name || "unknown";
 
     // Find the associated service
     const services = await this.k8sApi.listNamespacedService({
       namespace: env.K8S_NAMESPACE,
-      labelSelector: `app=worker,discord-guild-id=${guildId}`
+      labelSelector: `app=worker,discord-guild-id=${guildId}`,
     });
 
     const service = services.items[0];
     if (!service) {
-      throw new Error(`No service found for worker ${podName} (guild: ${guildId})`);
+      throw new Error(
+        `No service found for worker ${podName} (guild: ${guildId})`,
+      );
     }
 
     this.workers.set(podName, {
@@ -56,10 +64,12 @@ export class WorkerRegistry {
       guildId,
       channelId,
       healthy: false,
-      lastChecked: new Date()
+      lastChecked: new Date(),
     });
-    
-    console.log(`Registered worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
+
+    console.log(
+      `Registered worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`,
+    );
   }
 
   /**
@@ -73,8 +83,9 @@ export class WorkerRegistry {
    * Get all workers for a guild
    */
   getWorkersByGuild(guildId: string): TrackedWorker[] {
-    return Array.from(this.workers.values())
-      .filter(worker => worker.guildId === guildId);
+    return Array.from(this.workers.values()).filter(
+      (worker) => worker.guildId === guildId,
+    );
   }
 
   /**
@@ -118,11 +129,13 @@ export class WorkerRegistry {
       // Use the worker's service DNS name to check health via gRPC
       const address = this.getWorkerServiceDns(worker.guildId);
       const isHealthy = await checkWorkerHealth(address);
-      
+
       worker.healthy = isHealthy;
       worker.lastChecked = new Date();
-      
-      console.log(`Health check for worker ${podName}: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+
+      console.log(
+        `Health check for worker ${podName}: ${isHealthy ? "HEALTHY" : "UNHEALTHY"}`,
+      );
       return isHealthy;
     } catch (error) {
       console.error(`Error checking health for worker ${podName}:`, error);
@@ -147,7 +160,7 @@ export class WorkerRegistry {
       // Get all pods with the app=worker label in our namespace
       const pods = await this.k8sApi.listNamespacedPod({
         namespace: env.K8S_NAMESPACE,
-        labelSelector: 'app=worker'
+        labelSelector: "app=worker",
       });
 
       console.log(`Found ${pods.items.length} worker pods in the cluster`);
@@ -158,19 +171,21 @@ export class WorkerRegistry {
         if (!podName) continue;
 
         // Extract guild ID and channel ID from pod labels
-        const guildId = pod.metadata?.labels?.['discord-guild-id'];
-        const channelId = pod.metadata?.labels?.['discord-channel-id'];
+        const guildId = pod.metadata?.labels?.["discord-guild-id"];
+        const channelId = pod.metadata?.labels?.["discord-channel-id"];
 
         if (guildId && channelId) {
           // Find the associated service
           const services = await this.k8sApi.listNamespacedService({
             namespace: env.K8S_NAMESPACE,
-            labelSelector: `app=worker,discord-guild-id=${guildId}`
+            labelSelector: `app=worker,discord-guild-id=${guildId}`,
           });
 
           const service = services.items[0];
           if (!service) {
-            console.warn(`No service found for worker ${podName} (guild: ${guildId})`);
+            console.warn(
+              `No service found for worker ${podName} (guild: ${guildId})`,
+            );
             continue;
           }
 
@@ -181,16 +196,20 @@ export class WorkerRegistry {
             guildId,
             channelId,
             healthy: false,
-            lastChecked: new Date()
+            lastChecked: new Date(),
           });
 
-          console.log(`Loaded existing worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`);
+          console.log(
+            `Loaded existing worker pod ${podName} and service ${service.metadata?.name} for guild ${guildId}, channel ${channelId}`,
+          );
         } else {
-          console.warn(`Found worker pod ${podName} without guild ID or channel ID labels`);
+          console.warn(
+            `Found worker pod ${podName} without guild ID or channel ID labels`,
+          );
         }
       }
     } catch (error) {
-      console.error('Error loading existing workers:', error);
+      console.error("Error loading existing workers:", error);
       throw error;
     }
   }
@@ -208,11 +227,11 @@ export class WorkerRegistry {
       // Clean up the pod and service
       await this.k8sApi.deleteNamespacedPod({
         name: podName,
-        namespace: env.K8S_NAMESPACE
+        namespace: env.K8S_NAMESPACE,
       });
       await this.k8sApi.deleteNamespacedService({
         name: podName,
-        namespace: env.K8S_NAMESPACE
+        namespace: env.K8S_NAMESPACE,
       });
 
       // Unregister the worker

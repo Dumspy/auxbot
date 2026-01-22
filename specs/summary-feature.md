@@ -174,16 +174,19 @@ Summarize the following Discord messages from [channel name]:
 ### Error Categories
 
 1. **Input Validation Errors**
+
    - Invalid timeframe format
    - Limit out of range
    - Missing guild context
 
 2. **Discord API Errors**
+
    - Rate limit exceeded
    - Missing permissions
    - Channel not found
 
 3. **AI API Errors**
+
    - API key invalid/missing
    - Rate limit exceeded
    - Model unavailable

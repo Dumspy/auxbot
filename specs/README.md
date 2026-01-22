@@ -30,9 +30,9 @@ Design documentation for Auxbot, a microservices-based Discord bot built with Ty
 
 ## Deployment
 
-| Spec | Code                 | Purpose                         |
-| ---- | -------------------- | ------------------------------- |
-| TBD  | `.github/workflows/` | CI/CD pipeline specifications   |
+| Spec | Code                 | Purpose                       |
+| ---- | -------------------- | ----------------------------- |
+| TBD  | `.github/workflows/` | CI/CD pipeline specifications |
 
 ---
 

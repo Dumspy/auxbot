@@ -1,11 +1,14 @@
-import { credentials } from '@grpc/grpc-js';
-import { WorkerLifecycleClient, WorkerLifecycleResponse } from '@auxbot/protos/worker_lifecycle';
-import { env } from '../../env.js';
-import { captureException } from '@auxbot/sentry';
+import { credentials } from "@grpc/grpc-js";
+import {
+  WorkerLifecycleClient,
+  WorkerLifecycleResponse,
+} from "@auxbot/protos/worker_lifecycle";
+import { env } from "../../env.js";
+import { captureException } from "@auxbot/sentry";
 
 const client = new WorkerLifecycleClient(
   `auxbot-controller.${env.K8S_NAMESPACE}.svc.cluster.local:50051`,
-  credentials.createInsecure()
+  credentials.createInsecure(),
 );
 
 export const notifyShutdown = async (reason: string): Promise<boolean> => {
@@ -22,7 +25,7 @@ export const notifyShutdown = async (reason: string): Promise<boolean> => {
           return resolve(false);
         }
         resolve(response.acknowledged);
-      }
+      },
     );
   });
 };
