@@ -97,3 +97,12 @@
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
 - Phase 5 (Future Considerations) - Task 1 complete, Task 2 remaining
+
+[2026-01-22] Phase 1, Task 4: Fix pagination early-break condition (bug)
+- Modified: apps/controller/src/utils/messages.ts:81-91
+- Replaced incorrect early-break condition (filteredMessages.length === 0) with proper checks
+- Now stops only when fetched.size === 0 OR lastMessage.createdTimestamp <= startTime
+- Fixes bug where pagination stopped prematurely when older valid messages still existed
+- Phase 1 (Critical Fixes) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed
