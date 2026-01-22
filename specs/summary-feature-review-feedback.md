@@ -35,7 +35,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: Summarizing huge history causes timeouts and high costs
   - Fix: Reject with friendly error if `timeframe.totalMs > MAX_TIMEFRAME_MS`
 
-- [ ] Add max prompt size limit (e.g., 50k characters)
+- [x] Add max prompt size limit (e.g., 50k characters)
 
   - File: `apps/controller/src/utils/messages.ts` or `apps/controller/src/commands/summary.ts`
   - Issue: 500 messages can produce prompts too large for model context

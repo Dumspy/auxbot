@@ -83,7 +83,16 @@ registerInteraction({
         return;
       }
 
-      const formattedMessages = formatMessages(messages);
+      const MAX_PROMPT_SIZE = 50000;
+      let formattedMessages = formatMessages(messages);
+
+      if (formattedMessages.length > MAX_PROMPT_SIZE) {
+        const truncatedLength = MAX_PROMPT_SIZE - 50;
+        formattedMessages =
+          formattedMessages.slice(0, truncatedLength) +
+          "\n\n... (truncated to last messages)";
+      }
+
       const summary = await generateSummary(formattedMessages);
 
       const truncatedSummary =

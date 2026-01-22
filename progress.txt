@@ -33,3 +33,10 @@
 - Rejects with friendly error if timeframe exceeds 7 days
 - Prevents timeouts and high costs from summarizing huge history
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 2, Task 3: Add max prompt size limit (50k characters)
+- Modified: apps/controller/src/commands/summary.ts:76-84
+- Added MAX_PROMPT_SIZE constant (50000)
+- Truncates formatted messages and adds note if exceeds limit
+- Prevents prompts that are too large for AI model context
+- Ran lint: passed with only pre-existing warnings
