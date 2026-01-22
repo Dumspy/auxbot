@@ -116,3 +116,11 @@
 - Phase 2 (High Priority: Safety + UX) now complete
 - Ran lint: passed with only pre-existing warnings
 - Ran typecheck: passed
+
+[2026-01-22] Phase 3, Task 4: Fix timeout error detection
+- Modified: apps/controller/src/services/ai.ts:42-50
+- Added check for AbortError and rethrow with stable error message "AI request timeout"
+- Fixes bug where timeout error was never caught because AbortController throws AbortError
+- Phase 3 (Medium Priority: Error Handling + Security) now complete
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: passed

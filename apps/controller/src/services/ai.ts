@@ -39,6 +39,11 @@ export async function generateSummary(messages: string): Promise<string> {
         messageCount: messages.split("\n").length,
       },
     });
+
+    if (error?.name === "AbortError") {
+      throw new Error("AI request timeout");
+    }
+
     throw error;
   }
 }
