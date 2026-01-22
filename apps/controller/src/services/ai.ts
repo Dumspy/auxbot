@@ -17,17 +17,17 @@ export async function generateSummary(messages: string): Promise<string> {
  ${messages}`;
 
   try {
-    const result = (await Promise.race([
-      generateText({
-        model: zhipu("glm-4.7-flash"),
-        system: systemPrompt,
-        prompt: userPrompt,
-      }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("AI request timeout")), 30000),
-      ),
-    ])) as Awaited<ReturnType<typeof generateText>>;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
+    const result = await generateText({
+      model: zhipu("glm-4.7-flash"),
+      system: systemPrompt,
+      prompt: userPrompt,
+      abortSignal: controller.signal,
+    });
+
+    clearTimeout(timeout);
     return result.text;
   } catch (error: any) {
     captureException(error, {

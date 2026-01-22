@@ -75,7 +75,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Issue: Timeframe validated twice (Zod regex + parseTimeframe)
   - Fix: Export `timeframeSchema` from utils and reuse, or have `parseTimeframe()` handle all validation
 
-- [ ] Consider using `AbortController` for proper timeout handling
+- [x] Consider using `AbortController` for proper timeout handling
 
   - File: `apps/controller/src/services/ai.ts`
   - Issue: `Promise.race` doesn't abort the in-flight request; may still incur costs

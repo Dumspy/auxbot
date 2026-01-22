@@ -78,3 +78,11 @@
 - Single source of truth for timeframe validation
 - Ran lint: passed with only pre-existing warnings
 - Typecheck: passed (pre-existing worker errors unrelated to changes)
+
+[2026-01-22] Phase 4, Task 2: Consider using AbortController for proper timeout handling
+- Modified: apps/controller/src/services/ai.ts:19-32
+- Replaced Promise.race with AbortController for proper timeout handling
+- Added abortSignal to generateText options
+- Timeout now properly aborts the in-flight request to prevent incurring costs
+- Ran lint: passed with only pre-existing warnings
+- Ran typecheck: controller passed, worker has pre-existing errors unrelated to changes
