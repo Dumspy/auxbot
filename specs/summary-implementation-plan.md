@@ -15,7 +15,7 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 2: AI Service
 
-- [ ] Create directory `apps/controller/src/services/`
+- [x] Create directory `apps/controller/src/services/`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
 - [ ] Create file `apps/controller/src/services/ai.ts`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
