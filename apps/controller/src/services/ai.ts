@@ -16,9 +16,26 @@ export async function generateSummary(messages: string): Promise<string> {
 
  ${messages}`;
 
+  const messageCount = messages.split("\n").length;
+  const promptLength = userPrompt.length;
+  const startTime = Date.now();
+
+  console.log("[AI] Starting generateSummary", {
+    messageCount,
+    promptLength,
+    model: "glm-4.7-flash",
+  });
+
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => {
+      console.log("[AI] Timeout triggered after 30s", {
+        messageCount,
+        promptLength,
+        elapsedMs: Date.now() - startTime,
+      });
+      controller.abort();
+    }, 30000);
 
     const result = await generateText({
       model: zhipu("glm-4.7-flash"),
@@ -28,20 +45,44 @@ export async function generateSummary(messages: string): Promise<string> {
     });
 
     clearTimeout(timeout);
+
+    const elapsedMs = Date.now() - startTime;
+    console.log("[AI] generateSummary completed", {
+      elapsedMs,
+      responseLength: result.text.length,
+      usage: result.usage,
+    });
+
     return result.text;
   } catch (error: any) {
+    const elapsedMs = Date.now() - startTime;
+
+    console.error("[AI] generateSummary failed", {
+      elapsedMs,
+      messageCount,
+      promptLength,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      errorCause: error?.cause,
+    });
+
     captureException(error, {
       tags: {
         service: "ai",
         function: "generateSummary",
       },
       extra: {
-        messageCount: messages.split("\n").length,
+        messageCount,
+        promptLength,
+        elapsedMs,
+        errorName: error?.name,
+        errorCode: error?.code,
       },
     });
 
     if (error?.name === "AbortError") {
-      throw new Error("AI request timeout");
+      throw new Error(`AI request timeout after ${elapsedMs}ms (prompt: ${promptLength} chars)`);
     }
 
     throw error;
