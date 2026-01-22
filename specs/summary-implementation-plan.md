@@ -38,33 +38,33 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 3: Message Utilities
 
-- [ ] Create directory `apps/controller/src/utils/`
+- [x] Create directory `apps/controller/src/utils/`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Create file `apps/controller/src/utils/messages.ts`
+- [x] Create file `apps/controller/src/utils/messages.ts`
   - Source: [Component Structure section](./summary-feature.md#component-structure)
-- [ ] Create `parseTimeframe()` function to parse timeframe strings
+- [x] Create `parseTimeframe()` function to parse timeframe strings
   - Source: [Timeframe Parsing section](./summary-feature.md#timeframe-parsing)
-- [ ] Support single-unit formats: `30m`, `2h`, `1d`
+- [x] Support single-unit formats: `30m`, `2h`, `1d`
   - Source: [Timeframe Parsing section](./summary-feature.md#timeframe-parsing)
-- [ ] Support multi-unit formats: `1h30m`, `2d6h`, `45m`
+- [x] Support multi-unit formats: `1h30m`, `2d6h`, `45m`
   - Source: [Timeframe Parsing section](./summary-feature.md#timeframe-parsing)
-- [ ] Implement unit conversion (minutes/hours/days to milliseconds)
+- [x] Implement unit conversion (minutes/hours/days to milliseconds)
   - Source: [Timeframe Parsing section](./summary-feature.md#timeframe-parsing)
-- [ ] Create `calculateSnowflake()` function for Discord timestamps
+- [x] Create `calculateSnowflake()` function for Discord timestamps
   - Source: [Discord API Calls section](./summary-feature.md#discord-api-calls)
-- [ ] Create `fetchMessagesInRange()` function
+- [x] Create `fetchMessagesInRange()` function
   - Source: [Discord API Calls section](./summary-feature.md#discord-api-calls)
-- [ ] Implement pagination with `channel.messages.fetch({ after: snowflake, limit: 100 })`
+- [x] Implement pagination with `channel.messages.fetch({ after: snowflake, limit: 100 })`
   - Source: [Discord API Calls section](./summary-feature.md#discord-api-calls)
-- [ ] Stop fetching when timeframe exceeded or message limit reached
+- [x] Stop fetching when timeframe exceeded or message limit reached
   - Source: [Discord API Calls section](./summary-feature.md#discord-api-calls)
-- [ ] Implement exponential backoff for rate limiting
+- [x] Implement exponential backoff for rate limiting
   - Source: [Discord API Calls section](./summary-feature.md#discord-api-calls)
-- [ ] Create `formatMessages()` function for AI processing
+- [x] Create `formatMessages()` function for AI processing
   - Source: [Message Formatting section](./summary-feature.md#message-formatting)
-- [ ] Include timestamp, author, content, attachment filenames
+- [x] Include timestamp, author, content, attachment filenames
   - Source: [Message Formatting section](./summary-feature.md#message-formatting)
-- [ ] Skip system messages and empty messages
+- [x] Skip system messages and empty messages
   - Source: [Message Formatting section](./summary-feature.md#message-formatting)
 
 ## Phase 4: Summary Command

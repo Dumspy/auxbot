@@ -7,11 +7,22 @@ Phase 1: Dependencies and Configuration - COMPLETED
 
 Date: 2026-01-22
 
-Phase 2: AI Service - IN PROGRESS
+Phase 2: AI Service - COMPLETED
 
 - Created directory apps/controller/src/services/
 - Created file apps/controller/src/services/ai.ts with Zhipu provider integration
 - Updated ai package to v5.0.0 to match zhipu-ai-provider compatibility
 - Updated zod package to v3.25.76 to satisfy ai package dependencies
+
+Date: 2026-01-22
+
+Phase 3: Message Utilities - COMPLETED
+
+- Created directory apps/controller/src/utils/
+- Created file apps/controller/src/utils/messages.ts
+- Implemented parseTimeframe() function with support for single and multi-unit formats
+- Implemented calculateSnowflake() function for Discord timestamps
+- Implemented fetchMessagesInRange() function with pagination and error handling
+- Implemented formatMessages() function to format messages for AI processing
 
 Date: 2026-01-22
