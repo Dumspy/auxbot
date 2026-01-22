@@ -6,7 +6,7 @@ Format for commit messages:
 ```
 type(scope): concise summary in present tense
 
-Short bullet point list of detailed explanatory text if necessary. Explain the "why" 
+Short concise bullet point list of explanatory text if necessary. Explain the "why" 
 behind the change, not just the "how."
 ```
 

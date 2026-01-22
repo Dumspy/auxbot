@@ -106,11 +106,12 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
   - Fix: Add optional `ephemeral` parameter or default to ephemeral
   - **Completed**: Added optional `ephemeral` boolean parameter (default: false)
 
-- [ ] Add validation for zero timeframe
+- [x] Add validation for zero timeframe
 
   - File: `apps/controller/src/utils/messages.ts`
   - Issue: `0m` passes regex validation but yields `totalMs = 0`, always returning no messages
   - Fix: Add `totalMs > 0` check in schema refinement or parseTimeframe
+  - **Completed**: Added refinement to timeframeSchema to check totalMs > 0
 
 - [ ] Remove unused `calculateSnowflake()` function
   - File: `apps/controller/src/utils/messages.ts`
@@ -130,15 +131,15 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
 - Phase 1 remaining: ~30 minutes (pagination fix)
 - Phase 2 remaining: ~15 minutes (truncation direction)
 - Phase 3 remaining: ~15 minutes (timeout error detection)
-- Phase 4 remaining: ~15 minutes (zero timeframe + cleanup)
+- Phase 4 remaining: ~5 minutes (cleanup - remove unused calculateSnowflake)
 - Phase 5 (Future): 1-2 days if implemented
 
-**Total Remaining Fixes:** ~1-2 hours
+**Total Remaining Fixes:** ~1.5 hours (excluding Phase 5)
 
 ---
 
-**Status:** Most items complete, 4 remaining issues
+**Status:** Most items complete, 3 remaining issues (1 cleanup, 1 future)
 **Created:** 2026-01-22
-**Updated:** 2026-01-22 (re-review)
+**Updated:** 2026-01-22 (re-review + zero timeframe fix)
 **Source:** Oracle code review of `summary-ralph` branch
 **Related:** [summary-implementation-plan.md](./summary-implementation-plan.md)

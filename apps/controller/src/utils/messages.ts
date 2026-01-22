@@ -1,9 +1,14 @@
 import type { Message, TextBasedChannel } from "discord.js";
 import { z } from "zod";
 
-export const timeframeSchema = z.string().regex(/^\d+[mhd](?:\d+[mhd])*$/i, {
-  message: "Invalid timeframe format. Use format like 1h, 30m, 2d6h",
-});
+export const timeframeSchema = z
+  .string()
+  .regex(/^\d+[mhd](?:\d+[mhd])*$/i, {
+    message: "Invalid timeframe format. Use format like 1h, 30m, 2d6h",
+  })
+  .refine((timeframe) => parseTimeframe(timeframe).totalMs > 0, {
+    message: "Timeframe must be greater than zero",
+  });
 
 export interface ParsedTimeframe {
   totalMs: number;
