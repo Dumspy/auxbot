@@ -48,7 +48,7 @@ Action items from code review of the `summary-ralph` branch. Based on Oracle ana
 
 ## Phase 3: Medium Priority (Error Handling + Security)
 
-- [ ] Sanitize error messages shown to users (don't leak internals)
+- [x] Sanitize error messages shown to users (don't leak internals)
 
   - File: `apps/controller/src/commands/summary.ts`
   - Issue: `error.message` exposed to users may leak provider details

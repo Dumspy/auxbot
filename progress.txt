@@ -47,3 +47,10 @@
 - Prevents AI output from triggering @everyone, role, or user mentions
 - Phase 2 (High Priority: Safety + UX) now complete
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 1: Sanitize error messages shown to users
+- Modified: apps/controller/src/commands/summary.ts:110-120
+- Replaced error.message with generic user-facing message
+- Error details still captured in Sentry for debugging
+- Prevents leaking provider details or internal information to users
+- Ran lint: passed with only pre-existing warnings

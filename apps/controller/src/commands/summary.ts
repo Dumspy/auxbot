@@ -124,7 +124,7 @@ registerInteraction({
         },
       });
       await interaction.editReply(
-        "Failed to generate summary: " + (error.message || "Unknown error"),
+        "Failed to generate summary. Please try again later.",
       );
     }
   },
