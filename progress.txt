@@ -62,3 +62,10 @@
 - Added specific error for AI timeout
 - Provides more helpful error messages to users
 - Ran lint: passed with only pre-existing warnings
+
+[2026-01-22] Phase 3, Task 3: Add prompt injection protection in system prompt
+- Modified: apps/controller/src/services/ai.ts:12-17
+- Added instruction to treat messages as untrusted content
+- Prevents AI from following instructions contained in malicious messages
+- Phase 3 (Medium Priority: Error Handling + Security) now complete
+- Ran lint: passed with only pre-existing warnings
