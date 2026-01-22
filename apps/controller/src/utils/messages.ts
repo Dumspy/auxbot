@@ -82,16 +82,16 @@ export async function fetchMessagesInRange(
         break;
       }
 
+      const remainingSlots = limit - messages.length;
+      const toAdd = filteredMessages.slice(0, remainingSlots);
+      messages.push(...toAdd);
+
       const lastMessage = fetched.last();
       if (lastMessage && lastMessage.createdTimestamp <= startTime) {
         break;
       }
 
-      const remainingSlots = limit - messages.length;
-      const toAdd = filteredMessages.slice(0, remainingSlots);
-      messages.push(...toAdd);
-
-      beforeId = fetched.last()?.id;
+      beforeId = lastMessage?.id;
       retries = 0;
     } catch (error) {
       if (
