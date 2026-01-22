@@ -182,7 +182,7 @@ Implementation checklist for the Discord message summary feature as specified in
 
 ## Phase 8: Documentation
 
-- [ ] Update README.md with new command usage examples
+- [x] Update README.md with new command usage examples
   - Source: [Future Enhancements - Documentation](../README.md)
 
 ---
