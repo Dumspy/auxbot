@@ -1,8 +1,6 @@
 import * as grpc from "@grpc/grpc-js";
-import {
-  SearchClient,
-  SearchYouTubeResponse,
-} from "@auxbot/protos/search";
+import { Metadata } from "@grpc/grpc-js";
+import { SearchClient, SearchYouTubeResponse } from "@auxbot/protos/search";
 import { env } from "../../env.js";
 import { captureException } from "@auxbot/sentry";
 
@@ -25,20 +23,27 @@ export async function searchYouTube(
     const client = createSearchClient(guildId);
     const request = { query, page, limit };
 
-    client.searchYouTube(request, (error, response) => {
-      if (error) {
-        captureException(error, {
-          tags: {
-            guildId,
-            query,
-            page,
-            limit,
-          },
-        });
-        reject(error);
-        return;
-      }
-      resolve(response);
-    });
+    client.searchYouTube(
+      request,
+      new Metadata(),
+      { deadline: new Date(Date.now() + 10000) },
+      (error, response) => {
+        if (error) {
+          captureException(error, {
+            tags: {
+              guildId,
+              query,
+              page,
+              limit,
+            },
+          });
+          client.close();
+          reject(error);
+          return;
+        }
+        client.close();
+        resolve(response);
+      },
+    );
   });
 }

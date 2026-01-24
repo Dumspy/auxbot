@@ -14,6 +14,10 @@ import { searchYouTube } from "../grpc/client/search.js";
 import type { SearchYouTubeResponse } from "@auxbot/protos/search";
 import { workerRegistry } from "../k8s.js";
 import { formatDuration, isYouTubeUrl } from "../utils/youtube.js";
+import { captureException } from "@auxbot/sentry";
+
+const PAGE_SIZE = 5;
+const INTERACTION_TIMEOUT_MS = 30_000;
 
 interface SearchState {
   results: SearchYouTubeResponse["results"];
@@ -23,112 +27,152 @@ interface SearchState {
   userId: string;
   interaction: ChatInputCommandInteraction;
   hasMore: boolean;
+  sessionId: string;
 }
-
-const searchSessions = new Map<string, SearchState>();
 
 async function showSearchMenu(state: SearchState): Promise<void> {
   const { results, page, query, hasMore } = state;
 
-  const embed = new EmbedBuilder()
-    .setTitle(`Search Results for: "${query}"`)
-    .setColor("#0099ff");
+  const embed = new EmbedBuilder().setTitle(`Search Results for: "${query}"`).setColor("#0099ff");
 
   if (results.length === 0) {
     embed.setDescription("No results found.");
     await state.interaction.editReply({ embeds: [embed], components: [] });
-    searchSessions.delete(state.interaction.id);
     return;
   }
 
   results.forEach((result: SearchYouTubeResponse["results"][number], index: number) => {
     embed.addFields({
-      name: `${page * 5 + index + 1}. ${result.title}`,
-      value: `Duration: ${formatDuration(result.duration)} | Uploader: ${result.uploader}`,
+      name: `${page * PAGE_SIZE + index + 1}. ${result.title}`,
+      value: `Duration: ${result.duration != null ? formatDuration(result.duration) : "Live"} | Uploader: ${result.uploader}`,
     });
   });
 
   embed.setFooter({ text: `Page ${page + 1}` });
 
-  const selectButtons = results.map((result: SearchYouTubeResponse["results"][number], index: number) =>
-    new ButtonBuilder()
-      .setCustomId(`select_${page * 5 + index}`)
-      .setLabel(`${index + 1}`)
-      .setStyle(ButtonStyle.Primary),
+  const selectButtons = results.map(
+    (result: SearchYouTubeResponse["results"][number], index: number) =>
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
+        .setLabel(`${index + 1}`)
+        .setStyle(ButtonStyle.Primary),
   );
 
   const navigationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId("prev")
+      .setCustomId(`${state.sessionId}_prev`)
       .setLabel("Previous")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
     new ButtonBuilder()
-      .setCustomId("next")
+      .setCustomId(`${state.sessionId}_next`)
       .setLabel("Next")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(!hasMore),
     new ButtonBuilder()
-      .setCustomId("cancel")
+      .setCustomId(`${state.sessionId}_cancel`)
       .setLabel("Cancel")
       .setStyle(ButtonStyle.Danger),
   );
 
   const selectRow = new ActionRowBuilder<ButtonBuilder>().addComponents(selectButtons);
 
-  await state.interaction.editReply({
+  const replyMessage = await state.interaction.editReply({
     embeds: [embed],
     components: [selectRow, navigationButtons],
   });
 
-  const collector = state.interaction.channel?.createMessageComponentCollector({
+  if (!state.interaction.channel) {
+    await state.interaction.editReply({
+      embeds: [
+        new EmbedBuilder().setTitle("Cannot show interactive menu here").setColor("#ff0000"),
+      ],
+      components: [],
+    });
+    return;
+  }
+
+  const collector = replyMessage.createMessageComponentCollector({
     componentType: ComponentType.Button,
-    time: 30000,
-    filter: (i) => i.user.id === state.userId,
+    time: INTERACTION_TIMEOUT_MS,
+    filter: (i) => i.user.id === state.userId && i.customId.startsWith(state.sessionId),
   });
 
-  collector?.on("collect", async (buttonInteraction: ButtonInteraction) => {
+  collector.on("collect", async (buttonInteraction: ButtonInteraction) => {
     await buttonInteraction.deferUpdate();
 
     const customId = buttonInteraction.customId;
+    const customIdSuffix = customId.replace(`${state.sessionId}_`, "");
 
-    if (customId === "cancel") {
+    if (customIdSuffix === "cancel") {
       await state.interaction.editReply({
         embeds: [new EmbedBuilder().setTitle("Search cancelled").setColor("#ff0000")],
         components: [],
       });
-      searchSessions.delete(state.interaction.id);
       collector.stop();
       return;
     }
 
-    if (customId === "prev") {
+    if (customIdSuffix === "prev") {
       state.page--;
       await updateSearchResults(state);
       collector.stop();
       return;
     }
 
-    if (customId === "next") {
+    if (customIdSuffix === "next") {
       state.page++;
       await updateSearchResults(state);
       collector.stop();
       return;
     }
 
-    if (customId.startsWith("select_")) {
-      const selectedIndex = Number.parseInt(customId.split("_")[1] ?? "0", 10);
+    if (customIdSuffix.startsWith("select_")) {
+      const selectedIndex = Number.parseInt(customIdSuffix.split("_")[1] ?? "0", 10);
       const selectedResult = results.find(
-        (_: SearchYouTubeResponse["results"][number], i: number) => i + page * 5 === selectedIndex,
+        (_: SearchYouTubeResponse["results"][number], i: number) =>
+          i + page * PAGE_SIZE === selectedIndex,
       );
+
+      const disabledSelectButtons = results.map(
+        (result: SearchYouTubeResponse["results"][number], index: number) =>
+          new ButtonBuilder()
+            .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
+            .setLabel(`${index + 1}`)
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+      );
+
+      const disabledNavigationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`${state.sessionId}_prev`)
+          .setLabel("Previous")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId(`${state.sessionId}_next`)
+          .setLabel("Next")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId(`${state.sessionId}_cancel`)
+          .setLabel("Cancel")
+          .setStyle(ButtonStyle.Danger)
+          .setDisabled(true),
+      );
+
+      const disabledSelectRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        disabledSelectButtons,
+      );
+
+      await state.interaction.editReply({
+        embeds: [embed],
+        components: [disabledSelectRow, disabledNavigationButtons],
+      });
 
       if (selectedResult) {
         try {
-          const response = await addSong(
-            state.guildId,
-            selectedResult.url,
-            state.userId,
-          );
+          const response = await addSong(state.guildId, selectedResult.url, state.userId);
 
           await state.interaction.editReply({
             embeds: [
@@ -140,7 +184,14 @@ async function showSearchMenu(state: SearchState): Promise<void> {
             components: [],
           });
         } catch (error) {
-          console.error("Error adding song:", error);
+          captureException(error, {
+            tags: {
+              guildId: state.guildId,
+              userId: state.userId,
+              url: selectedResult.url,
+              action: "add_song",
+            },
+          });
           await state.interaction.editReply({
             embeds: [
               new EmbedBuilder()
@@ -151,32 +202,48 @@ async function showSearchMenu(state: SearchState): Promise<void> {
             components: [],
           });
         }
+      } else {
+        await state.interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Failed to select song")
+              .setDescription("The selected result could not be found.")
+              .setColor("#ff0000"),
+          ],
+          components: [],
+        });
       }
 
-      searchSessions.delete(state.interaction.id);
       collector.stop();
     }
   });
 
-  collector?.on("end", async (_: unknown, reason: string) => {
+  collector.on("end", async (_: unknown, reason: string) => {
     if (reason === "time") {
       await state.interaction.editReply({
         embeds: [new EmbedBuilder().setTitle("Search timed out").setColor("#ff0000")],
         components: [],
       });
-      searchSessions.delete(state.interaction.id);
     }
   });
 }
 
 async function updateSearchResults(state: SearchState): Promise<void> {
   try {
-    const response = await searchYouTube(state.guildId, state.query, state.page, 5);
+    const response = await searchYouTube(state.guildId, state.query, state.page, PAGE_SIZE);
     state.results = response.results;
     state.hasMore = response.hasMore;
     await showSearchMenu(state);
   } catch (error) {
-    console.error("Error fetching search results:", error);
+    captureException(error, {
+      tags: {
+        guildId: state.guildId,
+        userId: state.userId,
+        query: state.query,
+        page: state.page,
+        action: "search_youtube",
+      },
+    });
     await state.interaction.editReply({
       embeds: [
         new EmbedBuilder()
@@ -186,7 +253,6 @@ async function updateSearchResults(state: SearchState): Promise<void> {
       ],
       components: [],
     });
-    searchSessions.delete(state.interaction.id);
   }
 }
 
@@ -195,7 +261,10 @@ registerInteraction({
     .setName("play")
     .setDescription("Play a song")
     .addStringOption((option) =>
-      option.setName("song").setDescription("The url of song to play or search query").setRequired(true),
+      option
+        .setName("song")
+        .setDescription("The url of song to play or search query")
+        .setRequired(true),
     ) as SlashCommandBuilder,
   async execute(interaction) {
     const songInput = interaction.options.getString("song", true);
@@ -213,11 +282,18 @@ registerInteraction({
 
     if (isYouTubeUrl(songInput)) {
       try {
+        await interaction.deferReply();
         const response = await addSong(interaction.guildId, songInput, interaction.user.id);
-        await interaction.reply(
-          response.isPlaying ? "Now playing" : "Added to queue",
-        );
-      } catch {
+        await interaction.editReply(response.isPlaying ? "Now playing" : "Added to queue");
+      } catch (error) {
+        captureException(error, {
+          tags: {
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            url: songInput,
+            action: "add_song_direct",
+          },
+        });
         await interaction.reply("Failed to add song. Please try again later.");
       }
     } else {
@@ -231,21 +307,24 @@ registerInteraction({
         userId: interaction.user.id,
         interaction,
         hasMore: false,
+        sessionId: `${interaction.id}-${Date.now()}`,
       };
 
-      searchSessions.set(interaction.id, state);
-
       try {
-        const response = await searchYouTube(interaction.guildId, songInput, 0, 5);
+        const response = await searchYouTube(interaction.guildId, songInput, 0, PAGE_SIZE);
         state.results = response.results;
         state.hasMore = response.hasMore;
         await showSearchMenu(state);
       } catch (error) {
-        console.error("Error searching YouTube:", error);
-        await interaction.editReply(
-          "Failed to search. Please try again later.",
-        );
-        searchSessions.delete(interaction.id);
+        captureException(error, {
+          tags: {
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            query: songInput,
+            action: "search_youtube_initial",
+          },
+        });
+        await interaction.editReply("Failed to search. Please try again later.");
       }
     }
   },

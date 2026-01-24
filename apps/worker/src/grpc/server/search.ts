@@ -30,10 +30,10 @@ registerService<SearchService, SearchServer>(SearchService, {
       return;
     }
 
-    const actualLimit = limit || 5;
-    const offset = page * actualLimit;
+    const actualLimit = Math.max(1, Math.min(limit || 5, 10));
+    const offset = Math.max(0, page) * actualLimit;
 
-    const searchQuery = `ytsearch${offset + actualLimit}:${query}`;
+    const searchQuery = `ytsearch${offset + actualLimit + 1}:${query}`;
 
     try {
       const results = await searchWithYtDlp(searchQuery);
@@ -66,8 +66,14 @@ async function searchWithYtDlp(query: string): Promise<SearchYouTubeResponse["re
       "--dump-json",
       "--quiet",
       "--no-warnings",
+      "--",
       query,
     ]);
+
+    const timeout = setTimeout(() => {
+      ytDlp.kill("SIGKILL");
+      reject(new Error("yt-dlp timeout: 15s"));
+    }, 15000);
 
     ytDlp.stdout.setEncoding("utf-8");
 
@@ -102,6 +108,7 @@ async function searchWithYtDlp(query: string): Promise<SearchYouTubeResponse["re
     });
 
     ytDlp.on("close", (code) => {
+      clearTimeout(timeout);
       if (code !== 0) {
         reject(new Error(`yt-dlp exited with code ${code}`));
         return;
@@ -110,6 +117,7 @@ async function searchWithYtDlp(query: string): Promise<SearchYouTubeResponse["re
     });
 
     ytDlp.on("error", (error) => {
+      clearTimeout(timeout);
       reject(new Error(`Failed to spawn yt-dlp: ${error?.message ?? "Unknown error"}`));
     });
   });

@@ -1,7 +1,6 @@
 import * as grpc from "@grpc/grpc-js";
 import { env } from "../env.js";
 
-
 const server = new grpc.Server();
 
 export function registerService<
