@@ -1,17 +1,7 @@
-import * as grpc from "@grpc/grpc-js";
 import { Metadata } from "@grpc/grpc-js";
 import { SearchClient, SearchYouTubeResponse } from "@auxbot/protos/search";
-import { env } from "../../env.js";
 import { captureException } from "@auxbot/sentry";
-
-function getWorkerServiceAddress(guildId: string): string {
-  return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;
-}
-
-function createSearchClient(guildId: string): SearchClient {
-  const address = getWorkerServiceAddress(guildId);
-  return new SearchClient(address, grpc.credentials.createInsecure());
-}
+import { createGrpcClient } from "./common.js";
 
 export async function searchYouTube(
   guildId: string,
@@ -20,7 +10,7 @@ export async function searchYouTube(
   limit: number,
 ): Promise<SearchYouTubeResponse> {
   return new Promise((resolve, reject) => {
-    const client = createSearchClient(guildId);
+    const client = createGrpcClient(SearchClient, guildId);
     const request = { query, page, limit };
 
     client.searchYouTube(

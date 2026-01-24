@@ -1,4 +1,3 @@
-import * as grpc from "@grpc/grpc-js";
 import {
   AddSongResponse,
   ClearQueueResponse,
@@ -9,16 +8,11 @@ import {
   ResumeResponse,
   SkipResponse,
 } from "@auxbot/protos/player";
-import { env } from "../../env.js";
 import { captureException } from "@auxbot/sentry";
-
-function getWorkerServiceAddress(guildId: string): string {
-  return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;
-}
+import { createGrpcClient } from "./common.js";
 
 function createPlayerClient(guildId: string): PlayerClient {
-  const address = getWorkerServiceAddress(guildId);
-  return new PlayerClient(address, grpc.credentials.createInsecure());
+  return createGrpcClient(PlayerClient, guildId);
 }
 
 export async function addSong(
