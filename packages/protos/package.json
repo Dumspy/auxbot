@@ -10,6 +10,10 @@
       "types": "./src/generated/player.ts",
       "default": "./dist/generated/player.js"
     },
+    "./search": {
+      "types": "./src/generated/search.ts",
+      "default": "./dist/generated/search.js"
+    },
     "./worker_lifecycle": {
       "types": "./src/generated/worker_lifecycle.ts",
       "default": "./dist/generated/worker_lifecycle.js"
