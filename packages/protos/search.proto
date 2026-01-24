@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package search;
+
+service Search {
+  rpc SearchYouTube (SearchYouTubeRequest) returns (SearchYouTubeResponse);
+}
+
+message SearchYouTubeRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message SearchResult {
+  string id = 1;
+  string title = 2;
+  string url = 3;
+  string uploader = 4;
+  int32 duration = 5;
+  string thumbnail = 6;
+  int32 view_count = 7;
+}
+
+message SearchYouTubeResponse {
+  repeated SearchResult results = 1;
+  bool has_more = 2;
+}
