@@ -91,13 +91,13 @@ async function searchWithYtDlp(query: string): Promise<SearchYouTubeResponse["re
           const data = JSON.parse(line) as YtDlpResult;
 
           results.push({
-            id: data.id,
-            title: data.title,
-            url: data.webpage_url,
-            uploader: data.uploader,
-            duration: data.duration,
-            thumbnail: data.thumbnail,
-            viewCount: data.view_count,
+            id: data.id ?? "",
+            title: data.title ?? "",
+            url: data.webpage_url ?? "",
+            uploader: data.uploader ?? "Unknown",
+            duration: data.duration ?? 0,
+            thumbnail: data.thumbnail ?? "",
+            viewCount: data.view_count ?? 0,
           });
         } catch (parseError) {
           console.error("Failed to parse yt-dlp output:", parseError);
