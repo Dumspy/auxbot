@@ -54,7 +54,7 @@ async function showSearchMenu(state: SearchState): Promise<void> {
     (result: SearchYouTubeResponse["results"][number], index: number) =>
       new ButtonBuilder()
         .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
-        .setLabel(`${index + 1}`)
+        .setLabel(`${page * PAGE_SIZE + index + 1}`)
         .setStyle(ButtonStyle.Primary),
   );
 
@@ -64,6 +64,10 @@ async function showSearchMenu(state: SearchState): Promise<void> {
       .setLabel("Previous")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
+    new ButtonBuilder()
+      .setLabel(`Page ${page + 1}`)
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true),
     new ButtonBuilder()
       .setCustomId(`${state.sessionId}_next`)
       .setLabel("Next")
@@ -147,6 +151,10 @@ async function showSearchMenu(state: SearchState): Promise<void> {
         new ButtonBuilder()
           .setCustomId(`${state.sessionId}_prev`)
           .setLabel("Previous")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setLabel(`Page ${page + 1}`)
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(true),
         new ButtonBuilder()
