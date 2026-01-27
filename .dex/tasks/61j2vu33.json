@@ -1,0 +1,16 @@
+{
+  "id": "61j2vu33",
+  "parent_id": "x4o33lxo",
+  "description": "Add Discord voice connection tests",
+  "context": "Test Discord voice connection utilities:\n\n- Test getVoiceConnection() returns connection\n- Test getVoiceConnection() returns undefined if none\n- Test voice connection state management\n- Test voice channel joining\n- Test voice channel leaving\n- Test voice connection error handling\n- Test audio player attachment\n- Test voice connection mock isolation\n\nAcceptance: Discord voice connection utilities fully tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:23:57.092Z",
+  "updated_at": "2026-01-27T22:23:57.092Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

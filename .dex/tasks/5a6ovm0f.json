@@ -1,0 +1,16 @@
+{
+  "id": "5a6ovm0f",
+  "parent_id": "x4o33lxo",
+  "description": "Add K8s API adapter tests",
+  "context": "Test K8s adapter functions:\n\n- Test lazy initialization of getCoreV1Api()\n- Test setCoreV1Api() injection\n- Test resetCoreV1Api() isolation\n- Test getAppsV1Api() parallel clients\n- Test createNamespacedPod() error handling\n- Test listNamespacedService() with filters\n- Test delete operations with cleanup verification\n- Test adapter state between test cases\n\nAcceptance: K8s adapter functions tested with mock and error scenarios.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:06:18.112Z",
+  "updated_at": "2026-01-27T22:06:18.112Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

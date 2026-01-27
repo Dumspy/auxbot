@@ -1,0 +1,16 @@
+{
+  "id": "pzbyeiop",
+  "parent_id": "x4o33lxo",
+  "description": "Test gRPC server handlers",
+  "context": "Test apps/worker/src/grpc/server/ gRPC handlers:\n\n- Test health check handler\n- Test player addSong/skipSong/pauseSong handlers\n- Test player queueSong/clearQueue handlers\n- Test search handler with valid query\n- Test worker lifecycle handler\n- Test error handling in gRPC calls\n- Test handler mock validation\n\nAcceptance: All gRPC server handlers tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:25:25.572Z",
+  "updated_at": "2026-01-27T22:25:25.572Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

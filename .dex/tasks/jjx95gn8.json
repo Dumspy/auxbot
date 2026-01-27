@@ -1,0 +1,16 @@
+{
+  "id": "jjx95gn8",
+  "parent_id": "x4o33lxo",
+  "description": "Add Discord interaction registry tests",
+  "context": "Test packages/discord/src/interaction.ts:\n\n- Test registerInteraction() adds to registry\n- Test getInteractions() returns all registered\n- Test getInteraction() finds by name\n- Test getInteraction() returns undefined for missing\n- Test executeCommandHandler() with valid command\n- Test executeCommandHandler() with non-chat input (ignores)\n- Test executeCommandHandler() with missing command (rejects)\n- Test executeCommandHandler() with execution error (catches and rejects)\n- Test interaction registry isolation between tests\n\nAcceptance: Discord interaction registry fully tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:15:07.084Z",
+  "updated_at": "2026-01-27T22:15:07.084Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

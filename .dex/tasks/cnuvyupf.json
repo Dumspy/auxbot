@@ -1,0 +1,16 @@
+{
+  "id": "cnuvyupf",
+  "parent_id": "x4o33lxo",
+  "description": "Add gRPC client tests",
+  "context": "Test gRPC client operations via testkit mocks:\n\n- Test addSong() with validation\n- Test skipSong() with queue state\n- Test pauseSong() and resumeSong() state checks\n- Test queueSong() with queue limits\n- Test clearQueue() cleanup behavior\n- Test error responses from gRPC calls\n- Test mock client reset between tests\n\nAcceptance: gRPC client operations fully tested with state validation.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:06:18.124Z",
+  "updated_at": "2026-01-27T22:06:18.124Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

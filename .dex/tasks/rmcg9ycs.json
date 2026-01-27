@@ -1,0 +1,16 @@
+{
+  "id": "rmcg9ycs",
+  "parent_id": "x4o33lxo",
+  "description": "Add K8s resource generation tests",
+  "context": "Test apps/controller/src/jobs/worker.js K8s resource generation:\n\n- Test createWorkerResources() generates valid pod spec\n- Test createWorkerResources() generates valid service spec\n- Test pod labels include guild and channel IDs\n- Test service has correct selector for pod\n- Test service port configuration\n- Test resource limits/requests if configured\n- Test owner references for cleanup\n- Test pod image and command configuration\n\nAcceptance: K8s resource generation functions fully tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:23:55.939Z",
+  "updated_at": "2026-01-27T22:23:55.939Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

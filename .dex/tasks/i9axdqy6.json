@@ -1,0 +1,16 @@
+{
+  "id": "i9axdqy6",
+  "parent_id": "x4o33lxo",
+  "description": "Add inactivity timeout tests",
+  "context": "Test worker inactivity timeout behavior:\n\n- Test inactivity detection after timeout\n- Test inactivity timeout doesn't trigger during playback\n- Test inactivity timeout resets on activity\n- Test graceful shutdown sequence\n- Test voice connection cleanup on timeout\n- Test gRPC shutdown notification on timeout\n- Test process.exit() called with correct code\n- Test timeout configuration from environment\n- Test fake timers for timeout testing\n- Test cleanup before process exit\n\nAcceptance: Inactivity timeout behavior fully tested with fake timers.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:15:35.476Z",
+  "updated_at": "2026-01-27T22:15:35.476Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

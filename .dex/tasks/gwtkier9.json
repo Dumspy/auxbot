@@ -1,0 +1,16 @@
+{
+  "id": "gwtkier9",
+  "parent_id": "x4o33lxo",
+  "description": "Add environment configuration tests",
+  "context": "Test environment configuration and validation:\n\n- Test required environment variables presence\n- Test environment variable parsing\n- Test default value handling\n- Test invalid value validation\n- Test Zod schema validation for env config\n- Test environment-specific configurations (dev/prod)\n- Test type safety of env object\n\nAcceptance: Environment configuration has comprehensive validation tests.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:23:55.924Z",
+  "updated_at": "2026-01-27T22:23:55.924Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

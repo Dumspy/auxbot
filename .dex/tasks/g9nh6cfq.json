@@ -1,0 +1,16 @@
+{
+  "id": "g9nh6cfq",
+  "parent_id": "x4o33lxo",
+  "description": "Add Player state management tests",
+  "context": "Expand Player tests beyond lifecycle:\n\n- Test player volume controls\n- Test play/pause/resume state transitions\n- Test song skipping with queue management\n- Test getPlayerStatus() method\n- Test getRawPlayer() integration\n- Test error handling in downloadAndPlayYouTubeAudio\n- Test mock dependency injection scenarios\n\nAcceptance: Player class has comprehensive state and behavior tests.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:06:18.127Z",
+  "updated_at": "2026-01-27T22:06:18.127Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

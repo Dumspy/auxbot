@@ -1,0 +1,16 @@
+{
+  "id": "9jidqb5j",
+  "parent_id": "x4o33lxo",
+  "description": "Add worker entry point tests",
+  "context": "Test apps/worker/src/index.ts worker initialization:\n\n- Test Player initialization on startup\n- Test gRPC server startup\n- Test Voice connection setup\n- Test environment variable validation\n- Test graceful shutdown on SIGTERM/SIGINT\n- Test error handling during startup\n- Test worker health check initialization\n- Test default dependency injection\n\nAcceptance: Worker entry point and initialization tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:18:05.664Z",
+  "updated_at": "2026-01-27T22:18:05.664Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

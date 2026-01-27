@@ -1,0 +1,16 @@
+{
+  "id": "ri6vq6qw",
+  "parent_id": "x4o33lxo",
+  "description": "Add controller entry point tests",
+  "context": "Test apps/controller/src/index.ts controller initialization:\n\n- Test Express server initialization\n- Test Discord bot initialization\n- Test K8s client setup\n- Test WorkerRegistry init()\n- Test environment variable validation\n- Test HTTP route registration\n- Test error handling during startup\n- Test graceful shutdown handling\n\nAcceptance: Controller entry point and initialization tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:18:05.656Z",
+  "updated_at": "2026-01-27T22:18:05.656Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}

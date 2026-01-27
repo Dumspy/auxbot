@@ -5,10 +5,10 @@
   "context": "Task 7 from Phase 3: Modify apps/controller/src/k8s.ts (convert to lazy singleton pattern, add setCoreV1Api() and resetCoreV1Api(), no client created at import-time), Modify apps/controller/src/registry/worker-registry.ts (accept optional k8sApi in constructor, move loadExistingWorkers() + startHealthChecks() to init() method), Update imports to use node: prefix where applicable. Blocks: Phase 4 (tests need K8s adapters refactored).",
   "priority": 1,
   "completed": true,
-  "result": "Refactored apps/controller/src/k8s.ts to lazy singleton pattern with get/set/resetAppsV1Api() and get/set/resetCoreV1Api(). No client created at import-time. Refactored apps/controller/src/registry/worker-registry.ts to accept optional k8sApi in constructor, added init() method that calls loadExistingWorkers() and startHealthChecks(). Created apps/controller/src/spawn-worker.ts with spawnWorkerPod function using new getCoreV1Api(). Updated apps/controller/src/commands/join.ts import. All K8s client creation is now lazy and injectable for testing.",
+  "result": "Task completed as part of Phase 3.",
   "metadata": null,
   "created_at": "2026-01-26T22:23:42.665Z",
-  "updated_at": "2026-01-27T21:24:25.688Z",
+  "updated_at": "2026-01-27T22:03:03.457Z",
   "completed_at": "2026-01-27T21:24:25.688Z",
   "blockedBy": [],
   "blocks": [

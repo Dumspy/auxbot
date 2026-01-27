@@ -1,0 +1,16 @@
+{
+  "id": "e27s8ytz",
+  "parent_id": "x4o33lxo",
+  "description": "Add Discord bot initialization tests",
+  "context": "Test apps/controller/src/discord.ts bot initialization:\n\n- Test Discord client creation with token\n- Test command registration via getInteractions()\n- Test Discord event handlers (ready, interactionCreate, error)\n- Test Discord client login\n- Test Discord client shutdown\n- Test environment variable validation (DISCORD_TOKEN)\n- Test error handling during initialization\n- Test command handler setup\n\nAcceptance: Discord bot initialization and lifecycle tested.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-27T22:23:57.090Z",
+  "updated_at": "2026-01-27T22:23:57.090Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [],
+  "children": []
+}
