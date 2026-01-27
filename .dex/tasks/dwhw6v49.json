@@ -1,0 +1,18 @@
+{
+  "id": "dwhw6v49",
+  "parent_id": "wv6ejl7r",
+  "description": "Verify all acceptance criteria",
+  "context": "Task 12 from Phase 6: Run pnpm test — all tests pass, Run pnpm --filter @auxbot/controller test — filtered execution works, Run pnpm --filter @auxbot/worker test:watch — watch mode works, Confirm no test triggers real process.exit(), K8s, or Discord calls. Depends on: Phases 1-5. Completes: Phase 6 and entire epic.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-26T22:25:28.126Z",
+  "updated_at": "2026-01-26T22:28:32.389Z",
+  "completed_at": null,
+  "blockedBy": [
+    "zocirfu5"
+  ],
+  "blocks": [],
+  "children": []
+}

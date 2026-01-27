@@ -1,0 +1,20 @@
+{
+  "id": "zocirfu5",
+  "parent_id": "any047qk",
+  "description": "Update AGENTS.md",
+  "context": "Task 11 from Phase 5: Add test commands to AGENTS.md: pnpm test, pnpm --filter <pkg> test. Depends on: Task 10 (commands should match TESTING.md). Completes: Phase 5.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-26T22:24:56.424Z",
+  "updated_at": "2026-01-26T22:28:27.205Z",
+  "completed_at": null,
+  "blockedBy": [
+    "gsyynern"
+  ],
+  "blocks": [
+    "dwhw6v49"
+  ],
+  "children": []
+}

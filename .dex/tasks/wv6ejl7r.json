@@ -1,0 +1,20 @@
+{
+  "id": "wv6ejl7r",
+  "parent_id": "cs7gqxmn",
+  "description": "Phase 6: Validation",
+  "context": "Phase 6 from Testing Infrastructure Foundation spec. Includes task 12: Verify all acceptance criteria. Depends on: All previous phases must be complete before validation. Tasks are sequential. Completes the entire Testing Infrastructure Foundation epic.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-26T22:25:19.382Z",
+  "updated_at": "2026-01-26T22:35:53.686Z",
+  "completed_at": null,
+  "blockedBy": [
+    "any047qk"
+  ],
+  "blocks": [],
+  "children": [
+    "dwhw6v49"
+  ]
+}

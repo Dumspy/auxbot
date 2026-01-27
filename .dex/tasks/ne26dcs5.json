@@ -1,0 +1,22 @@
+{
+  "id": "ne26dcs5",
+  "parent_id": "ehnv37rv",
+  "description": "Add example tests for critical paths",
+  "context": "Task 9 from Phase 4: Create apps/worker/src/queue.test.ts (test add(), pop(), clear() methods), Create apps/controller/src/registry/worker-registry.test.ts (test registerWorker(), getWorkersByGuild(), cleanupWorker() with mock K8s), Create apps/controller/test/spawn-worker.test.ts (use setCoreV1Api() with mock from @auxbot/testkit, test spawnWorkerPod() flow), Create apps/worker/test/player-lifecycle.test.ts (use createPlayer() factory with mocked deps, vi.useFakeTimers() for inactivity timeout, vi.mock('node:child_process') for spawn). Depends on: Phases 2 and 3. Completes: Phase 4.",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-26T22:24:38.403Z",
+  "updated_at": "2026-01-26T22:28:17.567Z",
+  "completed_at": null,
+  "blockedBy": [
+    "tue34p2y",
+    "kdq39tcd",
+    "lpvdclek"
+  ],
+  "blocks": [
+    "gsyynern"
+  ],
+  "children": []
+}

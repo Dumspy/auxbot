@@ -1,0 +1,19 @@
+{
+  "id": "mv6q28gu",
+  "parent_id": "p5botcrr",
+  "description": "Add Vitest dependencies and root scripts",
+  "context": "Task 1 from Phase 1: Add vitest to root package.json devDependencies, Add @vitest/coverage-v8 (optional, no thresholds yet), Add root scripts: test: turbo run test, test:watch: turbo run test:watch. Blocks: Task 2 (base config requires Vitest installed).",
+  "priority": 1,
+  "completed": false,
+  "result": null,
+  "metadata": null,
+  "created_at": "2026-01-26T22:22:59.636Z",
+  "updated_at": "2026-01-26T22:22:59.636Z",
+  "completed_at": null,
+  "blockedBy": [],
+  "blocks": [
+    "biap65k2",
+    "uqmxnao4"
+  ],
+  "children": []
+}
