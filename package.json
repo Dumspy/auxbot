@@ -20,5 +20,11 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "tar": "^7.5.4",
+      "undici": "^6.23.0"
+    }
+  }
 }
