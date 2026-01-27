@@ -1,6 +1,6 @@
 import { registerInteraction } from "@auxbot/discord/interaction";
 import { SlashCommandBuilder, ChannelType } from "discord.js";
-import { spawnWorkerPod } from "../k8s.js";
+import { spawnWorkerPod } from "../spawn-worker.js";
 import { captureException } from "@auxbot/sentry";
 
 registerInteraction({

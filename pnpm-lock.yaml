@@ -66,6 +66,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@auxbot/testkit':
+        specifier: workspace:*
+        version: link:../../packages/testkit
       '@auxbot/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -81,6 +84,9 @@ importers:
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(tsx@4.19.3)
 
   apps/worker:
     dependencies:
@@ -115,6 +121,9 @@ importers:
         specifier: ^3.24.3
         version: 3.24.3
     devDependencies:
+      '@auxbot/testkit':
+        specifier: workspace:*
+        version: link:../../packages/testkit
       '@auxbot/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -127,6 +136,9 @@ importers:
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(tsx@4.19.3)
 
   packages/discord:
     dependencies:

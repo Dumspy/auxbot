@@ -4,27 +4,57 @@ import {
   createAudioPlayer,
   createAudioResource,
   StreamType,
+  type VoiceConnection,
+  type AudioPlayer,
 } from "@discordjs/voice";
-import { spawn } from "child_process";
-import path from "path";
-import { randomUUID } from "crypto";
-import { existsSync } from "fs";
-import { unlink } from "fs/promises";
+import { spawn } from "node:child_process";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { unlink } from "node:fs/promises";
 import { queue } from "./queue.js";
 import { env } from "./env.js";
 import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 import { getVoiceConnection } from "./index.js";
 import { captureException } from "@auxbot/sentry";
 
+interface PlayerDeps {
+  createAudioPlayer: () => AudioPlayer;
+  getVoiceConnection: () => VoiceConnection | undefined;
+  spawn: (command: string, args: readonly string[]) => any;
+  processExit: (code: number) => never;
+}
+
+function createProductionDeps(): PlayerDeps {
+  return {
+    createAudioPlayer,
+    getVoiceConnection,
+    spawn,
+    processExit: (code: number) => process.exit(code),
+  };
+}
+
+let defaultDeps: PlayerDeps = createProductionDeps();
+
+export function setDefaultDeps(deps: PlayerDeps): void {
+  defaultDeps = deps;
+}
+
+export function resetDefaultDeps(): void {
+  defaultDeps = createProductionDeps();
+}
+
 class Player {
-  private player = createAudioPlayer();
+  private player: AudioPlayer;
   private currentSong: { url: string; requesterId: string } | null = null;
-  private volume = 0.5; // 50% volume
+  private volume = 0.5;
   private lastActivityTime: number = Date.now();
   private inactivityCheckInterval: ReturnType<typeof setInterval>;
-  private readonly INACTIVITY_TIMEOUT = parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000; // Convert minutes to milliseconds
+  private readonly INACTIVITY_TIMEOUT = parseInt(env.INACTIVITY_TIMEOUT_MINUTES) * 60 * 1000;
 
-  constructor() {
+  constructor(deps: PlayerDeps = defaultDeps) {
+    this.player = deps.createAudioPlayer();
+
     this.player.on(AudioPlayerStatus.Idle, () => {
       console.log("Player is idle");
       this.playNext();
@@ -44,27 +74,23 @@ class Player {
       this.updateLastActivity();
     });
 
-    this.inactivityCheckInterval = setInterval(() => this.checkInactivity(), 60000);
+    this.inactivityCheckInterval = setInterval(() => this.checkInactivity(deps), 60000);
   }
 
-  private async gracefulShutdown() {
+  private async gracefulShutdown(deps: PlayerDeps) {
     console.log("Performing graceful shutdown...");
     try {
-      // Stop any current playback and clear interval
       clearInterval(this.inactivityCheckInterval);
       this.player.stop();
 
-      // Disconnect from voice channel first
-      const connection = getVoiceConnection();
+      const connection = deps.getVoiceConnection();
       if (connection) {
         console.log("Disconnecting from voice channel...");
         connection.destroy();
       }
 
-      // Wait a moment for the voice connection to fully close
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Now notify controller about shutdown
       await notifyShutdown("inactivity_timeout");
     } catch (error) {
       captureException(error, {
@@ -73,7 +99,7 @@ class Player {
         },
       });
     } finally {
-      process.exit(0);
+      deps.processExit(0);
     }
   }
 
@@ -81,26 +107,24 @@ class Player {
     this.lastActivityTime = Date.now();
   }
 
-  private async checkInactivity() {
+  private async checkInactivity(deps: PlayerDeps) {
     const timeSinceLastActivity = Date.now() - this.lastActivityTime;
     if (
       timeSinceLastActivity >= this.INACTIVITY_TIMEOUT &&
       this.player.state.status !== AudioPlayerStatus.Playing
     ) {
       console.log("Shutting down due to inactivity");
-      await this.gracefulShutdown();
+      await this.gracefulShutdown(deps);
     }
   }
 
-  private async downloadAndPlayYouTubeAudio(url: string): Promise<AudioResource> {
-    // Generate a unique filename in the auxbot temp directory
+  private async downloadAndPlayYouTubeAudio(deps: PlayerDeps, url: string): Promise<AudioResource> {
     const filename = path.join("/tmp/auxbot", `audio-${randomUUID()}.opus`);
 
     return new Promise((resolve, reject) => {
-      // yt-dlp command to download and convert audio
-      const ytDlp = spawn("yt-dlp", [
+      const ytDlp = deps.spawn("yt-dlp", [
         "-o",
-        filename, // Output file
+        filename,
         "-f",
         "bestaudio/best",
         "--no-playlist",
@@ -142,7 +166,6 @@ class Player {
           return;
         }
 
-        // Check if file exists
         if (!existsSync(filename)) {
           captureException(new Error("Audio file was not created."), {
             tags: {
@@ -154,19 +177,15 @@ class Player {
           return;
         }
 
-        // Create an audio resource from the file
         const resource = createAudioResource(filename, {
           inputType: StreamType.Opus,
           inlineVolume: true,
         });
 
-        // Set the volume
         resource.volume?.setVolume(this.volume);
 
-        // Play the audio
         this.player.play(resource);
 
-        // Clean up the file after playback ends
         resource.playStream.on("close", async () => {
           try {
             await unlink(filename);
@@ -180,9 +199,6 @@ class Player {
     });
   }
 
-  /**
-   * Play the next song in the queue
-   */
   async playNext() {
     this.updateLastActivity();
     const song = queue.pop();
@@ -196,13 +212,9 @@ class Player {
 
     this.currentSong = song;
     queue.playing = true;
-    await this.downloadAndPlayYouTubeAudio(song.url);
+    await this.downloadAndPlayYouTubeAudio(defaultDeps, song.url);
   }
 
-  /**
-   * Skip the current song and play the next one in the queue
-   * @returns Object with success status and information about the next song
-   */
   skipSong(): { success: boolean; hasNext: boolean; message: string } {
     if (!queue.playing) {
       return {
@@ -266,5 +278,8 @@ class Player {
   }
 }
 
-// Export a singleton instance of the Player
+export function createPlayer(deps: Partial<PlayerDeps> = {}) {
+  return new Player({ ...defaultDeps, ...deps });
+}
+
 export const player = new Player();

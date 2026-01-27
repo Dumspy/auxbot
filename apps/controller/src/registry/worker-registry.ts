@@ -2,9 +2,8 @@ import * as k8s from "@kubernetes/client-node";
 import { env } from "../env.js";
 import { checkWorkerHealth } from "../grpc/client/health.js";
 
-// Interface to represent a tracked worker
 interface TrackedWorker {
-  pod: k8s.V1Pod; // Changed from deployment to pod
+  pod: k8s.V1Pod;
   service: k8s.V1Service;
   guildId: string;
   channelId: string;
@@ -12,36 +11,38 @@ interface TrackedWorker {
   lastChecked: Date;
 }
 
+interface WorkerRegistryOptions {
+  k8sApi?: k8s.CoreV1Api;
+}
+
 export class WorkerRegistry {
   private workers: Map<string, TrackedWorker> = new Map();
   private k8sApi: k8s.CoreV1Api;
 
-  constructor() {
-    const kc = new k8s.KubeConfig();
-    kc.loadFromDefault();
-    this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-
-    // Load existing workers on startup
-    this.loadExistingWorkers()
-      .then(() => {
-        console.log("Loaded existing workers");
-        // Start periodic health checks
-        this.startHealthChecks();
-      })
-      .catch((error) => {
-        console.error("Failed to load existing workers:", error);
-        // Start periodic health checks anyway
-        this.startHealthChecks();
-      });
+  constructor(options: WorkerRegistryOptions = {}) {
+    this.k8sApi = options.k8sApi || this.createDefaultK8sApi();
   }
 
-  /**
-   * Register a new worker
-   */
+  private createDefaultK8sApi(): k8s.CoreV1Api {
+    const kc = new k8s.KubeConfig();
+    kc.loadFromDefault();
+    return kc.makeApiClient(k8s.CoreV1Api);
+  }
+
+  async init(): Promise<void> {
+    try {
+      await this.loadExistingWorkers();
+      console.log("Loaded existing workers");
+      this.startHealthChecks();
+    } catch (error) {
+      console.error("Failed to load existing workers:", error);
+      this.startHealthChecks();
+    }
+  }
+
   async registerWorker(pod: k8s.V1Pod, guildId: string, channelId: string): Promise<void> {
     const podName = pod.metadata?.name || "unknown";
 
-    // Find the associated service
     const services = await this.k8sApi.listNamespacedService({
       namespace: env.K8S_NAMESPACE,
       labelSelector: `app=worker,discord-guild-id=${guildId}`,
@@ -66,40 +67,24 @@ export class WorkerRegistry {
     );
   }
 
-  /**
-   * Get information about a worker
-   */
   getWorker(podName: string): TrackedWorker | undefined {
     return this.workers.get(podName);
   }
 
-  /**
-   * Get all workers for a guild
-   */
   getWorkersByGuild(guildId: string): TrackedWorker[] {
     return Array.from(this.workers.values()).filter((worker) => worker.guildId === guildId);
   }
 
-  /**
-   * Remove a worker from tracking
-   */
   unregisterWorker(podName: string): void {
     this.workers.delete(podName);
     console.log(`Unregistered worker pod ${podName}`);
   }
 
-  /**
-   * Get the service DNS name for a worker
-   */
   private getWorkerServiceDns(guildId: string): string {
     return `auxbot-worker-${guildId}.${env.K8S_NAMESPACE}.svc.cluster.local:50051`;
   }
 
-  /**
-   * Start periodic health checks for all workers
-   */
   private startHealthChecks(): void {
-    // Check all workers every 30 seconds
     setInterval(async () => {
       for (const [podName] of this.workers.entries()) {
         await this.checkWorkerHealth(podName);
@@ -107,9 +92,6 @@ export class WorkerRegistry {
     }, 30000);
   }
 
-  /**
-   * Check the health of a specific worker
-   */
   async checkWorkerHealth(podName: string): Promise<boolean> {
     const worker = this.workers.get(podName);
     if (!worker) {
@@ -118,7 +100,6 @@ export class WorkerRegistry {
     }
 
     try {
-      // Use the worker's service DNS name to check health via gRPC
       const address = this.getWorkerServiceDns(worker.guildId);
       const isHealthy = await checkWorkerHealth(address);
 
@@ -135,37 +116,27 @@ export class WorkerRegistry {
     }
   }
 
-  /**
-   * Get all currently tracked workers
-   */
   getAllWorkers(): TrackedWorker[] {
     return Array.from(this.workers.values());
   }
 
-  /**
-   * Load existing worker deployments from Kubernetes
-   */
   private async loadExistingWorkers(): Promise<void> {
     try {
-      // Get all pods with the app=worker label in our namespace
       const pods = await this.k8sApi.listNamespacedPod({
         namespace: env.K8S_NAMESPACE,
         labelSelector: "app=worker",
       });
 
-      console.log(`Found ${pods.items.length} worker pods in the cluster`);
+      console.log(`Found ${pods.items.length} worker pods in cluster`);
 
-      // Process each pod
       for (const pod of pods.items) {
         const podName = pod.metadata?.name;
         if (!podName) continue;
 
-        // Extract guild ID and channel ID from pod labels
         const guildId = pod.metadata?.labels?.["discord-guild-id"];
         const channelId = pod.metadata?.labels?.["discord-channel-id"];
 
         if (guildId && channelId) {
-          // Find the associated service
           const services = await this.k8sApi.listNamespacedService({
             namespace: env.K8S_NAMESPACE,
             labelSelector: `app=worker,discord-guild-id=${guildId}`,
@@ -177,7 +148,6 @@ export class WorkerRegistry {
             continue;
           }
 
-          // Register this worker with both pod and service
           this.workers.set(podName, {
             pod,
             service,
@@ -200,9 +170,6 @@ export class WorkerRegistry {
     }
   }
 
-  /**
-   * Clean up a worker's resources and unregister it
-   */
   async cleanupWorker(podName: string): Promise<void> {
     const worker = this.workers.get(podName);
     if (!worker) {
@@ -210,7 +177,6 @@ export class WorkerRegistry {
     }
 
     try {
-      // Clean up the pod and service
       await this.k8sApi.deleteNamespacedPod({
         name: podName,
         namespace: env.K8S_NAMESPACE,
@@ -220,7 +186,6 @@ export class WorkerRegistry {
         namespace: env.K8S_NAMESPACE,
       });
 
-      // Unregister the worker
       this.unregisterWorker(podName);
       console.log(`Cleaned up resources for worker ${podName}`);
     } catch (error) {
