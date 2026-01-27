@@ -1,0 +1,26 @@
+{
+  "name": "@auxbot/testkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@auxbot/typescript-config": "workspace:*",
+    "@kubernetes/client-node": "^1.4.0",
+    "typescript": "5.8.2",
+    "vitest": "4.0.18"
+  }
+}
