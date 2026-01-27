@@ -5,7 +5,7 @@
 - **Build**: `pnpm build` | **Lint**: `pnpm lint` | **Lint fix**: `pnpm lint:fix` | **Type check**: `pnpm check-types`
 - **Format**: `pnpm format` | **Format fix**: `pnpm format:fix`
 - **Dev mode**: `pnpm dev` | **Single app**: `pnpm --filter "@auxbot/controller" dev`
-- No test framework currently in use
+- **Test**: `pnpm test` | **Test watch**: `pnpm test:watch` | **Filter tests**: `pnpm --filter <pkg> test`
 
 ## Architecture
 

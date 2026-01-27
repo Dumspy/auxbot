@@ -4,12 +4,12 @@
   "description": "Update AGENTS.md",
   "context": "Task 11 from Phase 5: Add test commands to AGENTS.md: pnpm test, pnpm --filter <pkg> test. Depends on: Task 10 (commands should match TESTING.md). Completes: Phase 5.",
   "priority": 1,
-  "completed": false,
-  "result": null,
+  "completed": true,
+  "result": "Updated AGENTS.md to add test commands: 'pnpm test' for running all tests, 'pnpm test:watch' for watch mode, and 'pnpm --filter <pkg> test' for running tests on specific packages. Commands match TESTING.md documentation.",
   "metadata": null,
   "created_at": "2026-01-26T22:24:56.424Z",
-  "updated_at": "2026-01-26T22:28:27.205Z",
-  "completed_at": null,
+  "updated_at": "2026-01-27T21:47:25.396Z",
+  "completed_at": "2026-01-27T21:47:25.396Z",
   "blockedBy": [
     "gsyynern"
   ],
