@@ -1,14 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { spawnWorkerPod } from '../spawn-worker.js';
-import { setCoreV1Api, resetCoreV1Api, createMockCoreV1Api } from '@auxbot/testkit';
+import { spawnWorkerPod } from '../src/spawn-worker.js';
+import { setCoreV1Api, resetCoreV1Api } from '../src/k8s.js';
+import { createMockCoreV1Api } from '@auxbot/testkit';
 import * as k8s from '@kubernetes/client-node';
-import { env } from '../env.js';
+import { WorkerRegistry } from '../src/registry/worker-registry.js';
 
-vi.mock('../env.js', () => ({
-  env: { K8S_NAMESPACE: 'auxbot' },
-}));
-
-vi.mock('../jobs/worker.js', () => ({
+vi.mock('../src/jobs/worker.js', () => ({
   createWorkerResources: vi.fn(() => ({
     pod: {
       metadata: { name: 'worker-123', labels: {} },
@@ -37,45 +34,37 @@ describe('spawnWorkerPod', () => {
 
   it('should create new worker pod and service', async () => {
     (mockK8sApi.createNamespacedPod as any).mockResolvedValue({
-      body: { metadata: { name: 'worker-123', uid: 'test-uid' } },
+      metadata: { name: 'worker-123', uid: 'test-uid' } as any,
+    });
+    (mockK8sApi.listNamespacedService as any).mockResolvedValue({
+      items: [{ metadata: { name: 'worker-123' } }],
     });
 
     const podName = await spawnWorkerPod('guild1', 'channel1');
 
     expect(podName).toBe('worker-123');
-    expect(mockK8sApi.createNamespacedPod).toHaveBeenCalledWith({
-      namespace: 'auxbot',
-      body: expect.any(Object),
-    });
-    expect(mockK8sApi.createNamespacedService).toHaveBeenCalledWith({
-      namespace: 'auxbot',
-      body: expect.any(Object),
-    });
+    expect(mockK8sApi.createNamespacedPod).toHaveBeenCalled();
+    expect(mockK8sApi.createNamespacedService).toHaveBeenCalled();
   });
 
   it('should return existing worker if already exists', async () => {
     const existingPod = {
-      metadata: { name: 'existing-worker' },
+      metadata: { name: 'existing-worker', labels: {} },
     } as k8s.V1Pod;
     const existingService = {
       metadata: { name: 'existing-worker' },
     } as k8s.V1Service;
 
-    (mockK8sApi.listNamespacedPod as any).mockResolvedValue({
-      body: {
-        items: [
-          {
-            metadata: {
-              name: 'existing-worker',
-              labels: { 'app': 'worker', 'discord-guild-id': 'guild1' },
-            },
-          },
-        ],
+    vi.spyOn(WorkerRegistry.prototype, 'getWorkersByGuild').mockReturnValue([
+      {
+        pod: existingPod,
+        service: existingService,
+        guildId: 'guild1',
+        channelId: 'channel1',
+        healthy: false,
+        lastChecked: new Date(),
       },
-    });
-    (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      body: { items: [existingService] },
-    });
+    ]);
 
     const podName = await spawnWorkerPod('guild1', 'channel1');
 

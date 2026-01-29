@@ -3,6 +3,7 @@ import { initApp } from "./express.js";
 import { initClient } from "./discord.js";
 import { workerRegistry } from "./k8s.js";
 import { initGrpc } from "./grpc/index.js";
+import type { TrackedWorker } from "./registry/worker-registry.js";
 
 // Initialize Sentry as early as possible
 initSentry({
@@ -30,7 +31,7 @@ async function boot() {
         return;
       }
 
-      workers.forEach((worker) => {
+      workers.forEach((worker: TrackedWorker) => {
         console.log(
           `- Worker ${worker.pod.metadata?.name} (guild: ${worker.guildId}): ${worker.healthy ? "HEALTHY" : "UNHEALTHY"}`,
         );

@@ -1,12 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WorkerRegistry } from './worker-registry.js';
-import { createMockCoreV1Api, setCoreV1Api, resetCoreV1Api } from '@auxbot/testkit';
+import { createMockCoreV1Api } from '@auxbot/testkit';
 import * as k8s from '@kubernetes/client-node';
-import { env } from '../env.js';
-
-vi.mock('../env.js', () => ({
-  env: { K8S_NAMESPACE: 'auxbot' },
-}));
 
 vi.mock('../grpc/client/health.js', () => ({
   checkWorkerHealth: vi.fn().mockResolvedValue(true),
@@ -18,12 +13,10 @@ describe('WorkerRegistry', () => {
 
   beforeEach(() => {
     mockK8sApi = createMockCoreV1Api();
-    setCoreV1Api(mockK8sApi);
     registry = new WorkerRegistry({ k8sApi: mockK8sApi });
   });
 
   afterEach(() => {
-    resetCoreV1Api();
     vi.clearAllMocks();
   });
 
@@ -37,7 +30,7 @@ describe('WorkerRegistry', () => {
     } as k8s.V1Service;
 
     (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      body: { items: [service] },
+      items: [service],
     });
 
     await registry.registerWorker(pod, 'guild1', 'channel1');
@@ -66,8 +59,8 @@ describe('WorkerRegistry', () => {
     } as k8s.V1Service;
 
     (mockK8sApi.listNamespacedService as any)
-      .mockResolvedValueOnce({ body: { items: [service1] } })
-      .mockResolvedValueOnce({ body: { items: [service2] } });
+      .mockResolvedValueOnce({ items: [service1] })
+      .mockResolvedValueOnce({ items: [service2] });
 
     await registry.registerWorker(pod1, 'guild1', 'channel1');
     await registry.registerWorker(pod2, 'guild2', 'channel2');
@@ -76,9 +69,9 @@ describe('WorkerRegistry', () => {
     const guild2Workers = registry.getWorkersByGuild('guild2');
 
     expect(guild1Workers).toHaveLength(1);
-    expect(guild1Workers[0].guildId).toBe('guild1');
+    expect(guild1Workers[0]?.guildId).toBe('guild1');
     expect(guild2Workers).toHaveLength(1);
-    expect(guild2Workers[0].guildId).toBe('guild2');
+    expect(guild2Workers[0]?.guildId).toBe('guild2');
   });
 
   it('should cleanup worker resources', async () => {
@@ -90,7 +83,7 @@ describe('WorkerRegistry', () => {
     } as k8s.V1Service;
 
     (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      body: { items: [service] },
+      items: [service],
     });
 
     await registry.registerWorker(pod, 'guild1', 'channel1');

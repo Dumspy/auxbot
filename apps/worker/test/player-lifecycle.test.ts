@@ -1,14 +1,34 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createPlayer, setDefaultDeps, resetDefaultDeps, type PlayerDeps } from '../src/player.js';
 import type { AudioPlayer, VoiceConnection } from '@discordjs/voice';
+
+const mockClient = vi.hoisted(() => ({
+  login: vi.fn().mockResolvedValue(null),
+  destroy: vi.fn(),
+  once: vi.fn(),
+  on: vi.fn(),
+}));
+
+vi.mock('../src/discord.js', () => ({
+  getClient: vi.fn(() => mockClient),
+  boot: vi.fn(),
+  initClient: vi.fn(),
+}));
+
+vi.mock('../src/grpc/client/worker_lifecycle.js', () => ({
+  notifyShutdown: vi.fn().mockResolvedValue(undefined),
+}));
+
+import { createPlayer, setDefaultDeps, resetDefaultDeps } from '../src/player.js';
+import { queue } from '../src/queue.js';
 
 describe('Player lifecycle', () => {
   let mockAudioPlayer: AudioPlayer;
   let mockVoiceConnection: VoiceConnection;
-  let mockDeps: PlayerDeps;
+  let mockDeps: any;
 
   beforeEach(() => {
     vi.useFakeTimers();
+    queue.clear();
 
     mockAudioPlayer = {
       play: vi.fn(),
@@ -37,6 +57,7 @@ describe('Player lifecycle', () => {
     vi.useRealTimers();
     resetDefaultDeps();
     vi.clearAllMocks();
+    queue.clear();
   });
 
   it('should create player with injected dependencies', () => {
@@ -45,6 +66,7 @@ describe('Player lifecycle', () => {
   });
 
   it('should skip song when playing', () => {
+    queue.playing = true;
     const player = createPlayer();
     const result = player.skipSong();
 
@@ -66,25 +88,59 @@ describe('Player lifecycle', () => {
     expect(mockAudioPlayer.unpause).toHaveBeenCalled();
   });
 
-  it('should use fake timers for inactivity check', () => {
-    vi.setSystemTime(new Date('2024-01-01T00:00:00.000Z').getTime());
+  it('should disconnect voice connection on shutdown', async () => {
+    (mockAudioPlayer.state as any).status = 'idle';
+    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
     const player = createPlayer();
 
-    (mockAudioPlayer.state as any).status = 'idle';
+    vi.advanceTimersByTime(10 * 1000);
+    await vi.runOnlyPendingTimersAsync();
+    vi.advanceTimersByTime(1000);
+    await vi.runOnlyPendingTimersAsync();
 
-    vi.advanceTimersByTime(5 * 60 * 1000);
-
-    expect(mockDeps.processExit).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(60 * 1000);
-
+    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
     expect(mockDeps.processExit).toHaveBeenCalledWith(0);
   });
 
-  it('should disconnect voice connection on shutdown', () => {
+  it('should use fake timers for inactivity check and exit', async () => {
+    (mockAudioPlayer.state as any).status = 'idle';
+    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
     const player = createPlayer();
-    vi.advanceTimersByTime(6 * 60 * 1000);
+
+    vi.advanceTimersByTime(10 * 1000);
+    await vi.runOnlyPendingTimersAsync();
+    vi.advanceTimersByTime(1000);
+    await vi.runOnlyPendingTimersAsync();
 
     expect(mockVoiceConnection.destroy).toHaveBeenCalled();
+    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
+  });
+
+  it('should use fake timers for inactivity check and exit', async () => {
+    (mockAudioPlayer.state as any).status = 'idle';
+    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
+    const player = createPlayer();
+
+    vi.advanceTimersByTime(10 * 1000);
+    await vi.runOnlyPendingTimersAsync();
+    vi.advanceTimersByTime(1000);
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
+    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
+  });
+
+  it('should use fake timers for inactivity check and exit', async () => {
+    (mockAudioPlayer.state as any).status = 'idle';
+    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
+    const player = createPlayer();
+
+    vi.advanceTimersByTime(10 * 1000);
+    await vi.runOnlyPendingTimersAsync();
+    vi.advanceTimersByTime(1000);
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
+    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
   });
 });

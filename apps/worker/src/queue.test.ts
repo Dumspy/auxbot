@@ -10,8 +10,8 @@ describe('Queue', () => {
     const position = queue.add('https://example.com/song1', 'user1');
     expect(position).toBe(0);
     expect(queue.queue).toHaveLength(1);
-    expect(queue.queue[0].url).toBe('https://example.com/song1');
-    expect(queue.queue[0].requesterId).toBe('user1');
+    expect(queue.queue[0]?.url).toBe('https://example.com/song1');
+    expect(queue.queue[0]?.requesterId).toBe('user1');
   });
 
   it('should return correct position for multiple items', () => {

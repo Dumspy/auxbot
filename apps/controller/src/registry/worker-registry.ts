@@ -2,7 +2,7 @@ import * as k8s from "@kubernetes/client-node";
 import { env } from "../env.js";
 import { checkWorkerHealth } from "../grpc/client/health.js";
 
-interface TrackedWorker {
+export interface TrackedWorker {
   pod: k8s.V1Pod;
   service: k8s.V1Service;
   guildId: string;
@@ -194,3 +194,5 @@ export class WorkerRegistry {
     }
   }
 }
+
+export const workerRegistry = new WorkerRegistry();

@@ -20,7 +20,7 @@ import { captureException } from "@auxbot/sentry";
 
 interface PlayerDeps {
   createAudioPlayer: () => AudioPlayer;
-  getVoiceConnection: () => VoiceConnection | undefined;
+  getVoiceConnection: () => VoiceConnection | null;
   spawn: (command: string, args: readonly string[]) => any;
   processExit: (code: number) => never;
 }
@@ -139,7 +139,7 @@ class Player {
         url,
       ]);
 
-      ytDlp.on("error", (error) => {
+      ytDlp.on("error", (error: Error) => {
         captureException(error, {
           tags: {
             function: "downloadAndPlayYouTubeAudio",
@@ -149,11 +149,11 @@ class Player {
         reject(new Error(`yt-dlp process error: ${error.message}`));
       });
 
-      ytDlp.stderr.on("data", (data) => {
+      ytDlp.stderr.on("data", (data: Buffer) => {
         console.error(`yt-dlp error: ${data}`);
       });
 
-      ytDlp.on("close", async (code) => {
+      ytDlp.on("close", async (code: number | null) => {
         if (code !== 0 && code !== null) {
           captureException(new Error(`yt-dlp exited with code ${code}`), {
             tags: {

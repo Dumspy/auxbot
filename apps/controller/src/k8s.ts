@@ -40,3 +40,5 @@ export function resetCoreV1Api(): void {
 export function getK8sApi() {
   return getAppsV1Api();
 }
+
+export { workerRegistry } from "./registry/worker-registry.js";
