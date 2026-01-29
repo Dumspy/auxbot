@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { spawnWorkerPod } from '../src/spawn-worker.js';
 import { setCoreV1Api, resetCoreV1Api } from '../src/k8s.js';
-import { createMockCoreV1Api } from '@auxbot/testkit';
-import * as k8s from '@kubernetes/client-node';
+import { createMockCoreV1Api, createMockPod, createMockService, createMockServiceList } from '@auxbot/testkit';
+import type { CoreV1Api } from '@kubernetes/client-node';
 import { WorkerRegistry } from '../src/registry/worker-registry.js';
 
 vi.mock('../src/jobs/worker.js', () => ({
@@ -20,7 +20,7 @@ vi.mock('../src/jobs/worker.js', () => ({
 }));
 
 describe('spawnWorkerPod', () => {
-  let mockK8sApi: k8s.CoreV1Api;
+  let mockK8sApi: CoreV1Api;
 
   beforeEach(() => {
     mockK8sApi = createMockCoreV1Api();
@@ -33,12 +33,12 @@ describe('spawnWorkerPod', () => {
   });
 
   it('should create new worker pod and service', async () => {
-    (mockK8sApi.createNamespacedPod as any).mockResolvedValue({
-      metadata: { name: 'worker-123', uid: 'test-uid' } as any,
-    });
-    (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      items: [{ metadata: { name: 'worker-123' } }],
-    });
+    const mockCreatePod = vi.mocked(mockK8sApi.createNamespacedPod);
+    const mockListService = vi.mocked(mockK8sApi.listNamespacedService);
+
+    const pod = createMockPod('worker-123', 'test-uid');
+    mockCreatePod.mockResolvedValue(pod);
+    mockListService.mockResolvedValue(createMockServiceList([createMockService('worker-123')]));
 
     const podName = await spawnWorkerPod('guild1', 'channel1');
 
@@ -48,12 +48,9 @@ describe('spawnWorkerPod', () => {
   });
 
   it('should return existing worker if already exists', async () => {
-    const existingPod = {
-      metadata: { name: 'existing-worker', labels: {} },
-    } as k8s.V1Pod;
-    const existingService = {
-      metadata: { name: 'existing-worker' },
-    } as k8s.V1Service;
+    const existingPod = createMockPod('existing-worker');
+    existingPod.metadata!.labels = {};
+    const existingService = createMockService('existing-worker');
 
     vi.spyOn(WorkerRegistry.prototype, 'getWorkersByGuild').mockReturnValue([
       {

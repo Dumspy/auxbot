@@ -18,10 +18,10 @@ import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 import { getVoiceConnection } from "./index.js";
 import { captureException } from "@auxbot/sentry";
 
-interface PlayerDeps {
+export interface PlayerDeps {
   createAudioPlayer: () => AudioPlayer;
   getVoiceConnection: () => VoiceConnection | null;
-  spawn: (command: string, args: readonly string[]) => any;
+  spawn: (command: string, args: readonly string[]) => import('node:child_process').ChildProcess;
   processExit: (code: number) => never;
 }
 
@@ -149,7 +149,7 @@ class Player {
         reject(new Error(`yt-dlp process error: ${error.message}`));
       });
 
-      ytDlp.stderr.on("data", (data: Buffer) => {
+      ytDlp.stderr?.on("data", (data: Buffer) => {
         console.error(`yt-dlp error: ${data}`);
       });
 

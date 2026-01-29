@@ -18,13 +18,13 @@ vi.mock('../src/grpc/client/worker_lifecycle.js', () => ({
   notifyShutdown: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { createPlayer, setDefaultDeps, resetDefaultDeps } from '../src/player.js';
+import { createPlayer, setDefaultDeps, resetDefaultDeps, type PlayerDeps } from '../src/player.js';
 import { queue } from '../src/queue.js';
 
 describe('Player lifecycle', () => {
   let mockAudioPlayer: AudioPlayer;
   let mockVoiceConnection: VoiceConnection;
-  let mockDeps: any;
+  let mockDeps: PlayerDeps;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -36,18 +36,18 @@ describe('Player lifecycle', () => {
       pause: vi.fn(),
       unpause: vi.fn(),
       on: vi.fn(),
-      state: { status: 'idle' },
-    } as any;
+      state: { status: 'idle' as const },
+    } as unknown as AudioPlayer;
 
     mockVoiceConnection = {
       destroy: vi.fn(),
-    } as any;
+    } as unknown as VoiceConnection;
 
     mockDeps = {
       createAudioPlayer: () => mockAudioPlayer,
       getVoiceConnection: () => mockVoiceConnection,
       spawn: vi.fn(),
-      processExit: vi.fn(),
+      processExit: vi.fn() as unknown as (code: number) => never,
     };
 
     setDefaultDeps(mockDeps);
@@ -75,65 +75,26 @@ describe('Player lifecycle', () => {
   });
 
   it('should pause and resume playback', () => {
-    (mockAudioPlayer.state as any).status = 'playing';
+    const stateWithPlaying = mockAudioPlayer.state as { status: string };
+    stateWithPlaying.status = 'playing';
     const player = createPlayer();
 
     const paused = player.pausePlayback();
     expect(paused).toBe(true);
     expect(mockAudioPlayer.pause).toHaveBeenCalled();
 
-    (mockAudioPlayer.state as any).status = 'paused';
+    const stateWithPaused = mockAudioPlayer.state as { status: string };
+    stateWithPaused.status = 'paused';
     const resumed = player.resumePlayback();
     expect(resumed).toBe(true);
     expect(mockAudioPlayer.unpause).toHaveBeenCalled();
   });
 
   it('should disconnect voice connection on shutdown', async () => {
-    (mockAudioPlayer.state as any).status = 'idle';
+    const stateWithIdle = mockAudioPlayer.state as { status: string };
+    stateWithIdle.status = 'idle';
     process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
-    const player = createPlayer();
-
-    vi.advanceTimersByTime(10 * 1000);
-    await vi.runOnlyPendingTimersAsync();
-    vi.advanceTimersByTime(1000);
-    await vi.runOnlyPendingTimersAsync();
-
-    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
-    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
-  });
-
-  it('should use fake timers for inactivity check and exit', async () => {
-    (mockAudioPlayer.state as any).status = 'idle';
-    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
-    const player = createPlayer();
-
-    vi.advanceTimersByTime(10 * 1000);
-    await vi.runOnlyPendingTimersAsync();
-    vi.advanceTimersByTime(1000);
-    await vi.runOnlyPendingTimersAsync();
-
-    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
-    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
-  });
-
-  it('should use fake timers for inactivity check and exit', async () => {
-    (mockAudioPlayer.state as any).status = 'idle';
-    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
-    const player = createPlayer();
-
-    vi.advanceTimersByTime(10 * 1000);
-    await vi.runOnlyPendingTimersAsync();
-    vi.advanceTimersByTime(1000);
-    await vi.runOnlyPendingTimersAsync();
-
-    expect(mockVoiceConnection.destroy).toHaveBeenCalled();
-    expect(mockDeps.processExit).toHaveBeenCalledWith(0);
-  });
-
-  it('should use fake timers for inactivity check and exit', async () => {
-    (mockAudioPlayer.state as any).status = 'idle';
-    process.env.INACTIVITY_TIMEOUT_MINUTES = '0.1';
-    const player = createPlayer();
+    createPlayer();
 
     vi.advanceTimersByTime(10 * 1000);
     await vi.runOnlyPendingTimersAsync();

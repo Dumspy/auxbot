@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WorkerRegistry } from './worker-registry.js';
-import { createMockCoreV1Api } from '@auxbot/testkit';
-import * as k8s from '@kubernetes/client-node';
+import { createMockCoreV1Api, createMockPod, createMockService, createMockServiceList } from '@auxbot/testkit';
+import type { CoreV1Api } from '@kubernetes/client-node';
 
 vi.mock('../grpc/client/health.js', () => ({
   checkWorkerHealth: vi.fn().mockResolvedValue(true),
 }));
 
 describe('WorkerRegistry', () => {
-  let mockK8sApi: k8s.CoreV1Api;
+  let mockK8sApi: CoreV1Api;
   let registry: WorkerRegistry;
 
   beforeEach(() => {
@@ -21,17 +21,10 @@ describe('WorkerRegistry', () => {
   });
 
   it('should register a new worker', async () => {
-    const pod = {
-      metadata: { name: 'worker-123' },
-    } as k8s.V1Pod;
-
-    const service = {
-      metadata: { name: 'worker-123' },
-    } as k8s.V1Service;
-
-    (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      items: [service],
-    });
+    const pod = createMockPod('worker-123');
+    const service = createMockService('worker-123');
+    const mockList = vi.mocked(mockK8sApi.listNamespacedService);
+    mockList.mockResolvedValue(createMockServiceList([service]));
 
     await registry.registerWorker(pod, 'guild1', 'channel1');
 
@@ -42,25 +35,15 @@ describe('WorkerRegistry', () => {
   });
 
   it('should get workers by guild', async () => {
-    const pod1 = { metadata: { name: 'worker-1' } } as k8s.V1Pod;
-    const pod2 = { metadata: { name: 'worker-2' } } as k8s.V1Pod;
+    const pod1 = createMockPod('worker-1');
+    const pod2 = createMockPod('worker-2');
+    const service1 = createMockService('worker-1', 'guild1');
+    const service2 = createMockService('worker-2', 'guild2');
 
-    const service1 = {
-      metadata: {
-        name: 'worker-1',
-        labels: { 'discord-guild-id': 'guild1' },
-      },
-    } as k8s.V1Service;
-    const service2 = {
-      metadata: {
-        name: 'worker-2',
-        labels: { 'discord-guild-id': 'guild2' },
-      },
-    } as k8s.V1Service;
-
-    (mockK8sApi.listNamespacedService as any)
-      .mockResolvedValueOnce({ items: [service1] })
-      .mockResolvedValueOnce({ items: [service2] });
+    const mockList = vi.mocked(mockK8sApi.listNamespacedService);
+    mockList
+      .mockResolvedValueOnce(createMockServiceList([service1]))
+      .mockResolvedValueOnce(createMockServiceList([service2]));
 
     await registry.registerWorker(pod1, 'guild1', 'channel1');
     await registry.registerWorker(pod2, 'guild2', 'channel2');
@@ -75,16 +58,10 @@ describe('WorkerRegistry', () => {
   });
 
   it('should cleanup worker resources', async () => {
-    const pod = {
-      metadata: { name: 'worker-123' },
-    } as k8s.V1Pod;
-    const service = {
-      metadata: { name: 'worker-123' },
-    } as k8s.V1Service;
-
-    (mockK8sApi.listNamespacedService as any).mockResolvedValue({
-      items: [service],
-    });
+    const pod = createMockPod('worker-123');
+    const service = createMockService('worker-123');
+    const mockList = vi.mocked(mockK8sApi.listNamespacedService);
+    mockList.mockResolvedValue(createMockServiceList([service]));
 
     await registry.registerWorker(pod, 'guild1', 'channel1');
 

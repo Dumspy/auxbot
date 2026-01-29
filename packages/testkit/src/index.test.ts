@@ -16,7 +16,7 @@ describe('Testkit', () => {
     it('should resolve with mock response', async () => {
       const mockApi = createMockCoreV1Api();
 
-      const result = await mockApi.createNamespacedPod({} as any);
+      const result = await mockApi.createNamespacedPod('namespace' as never, {} as never);
 
       expect(result).toBeDefined();
     });
