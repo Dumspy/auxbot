@@ -65,6 +65,7 @@ async function showSearchMenu(state: SearchState): Promise<void> {
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
     new ButtonBuilder()
+      .setCustomId(`${state.sessionId}_page`)
       .setLabel(`Page ${page + 1}`)
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(true),
@@ -154,6 +155,7 @@ async function showSearchMenu(state: SearchState): Promise<void> {
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(true),
         new ButtonBuilder()
+          .setCustomId(`${state.sessionId}_page`)
           .setLabel(`Page ${page + 1}`)
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(true),
