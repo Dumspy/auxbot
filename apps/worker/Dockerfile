@@ -34,13 +34,10 @@ FROM base AS runner
 WORKDIR /app
 
 # Install required dependencies
-RUN apk add --no-cache python3 ffmpeg
+RUN apk add --no-cache python3 py3-pip ffmpeg
 
-# Install yt-dlp properly
-# wget is already installed in the container
-RUN mkdir -p /usr/local/bin
-RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-RUN chmod a+rx /usr/local/bin/yt-dlp
+# Install yt-dlp with full YouTube support dependencies
+RUN python3 -m pip install --no-cache-dir --break-system-packages "yt-dlp[default]"
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs

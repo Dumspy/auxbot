@@ -97,6 +97,8 @@ class Player {
     const filename = path.join("/tmp/auxbot", `audio-${randomUUID()}.opus`);
 
     return new Promise((resolve, reject) => {
+      let stderr = "";
+
       // yt-dlp command to download and convert audio
       const ytDlp = spawn("yt-dlp", [
         "-o",
@@ -110,8 +112,11 @@ class Player {
         "opus",
         "--audio-quality",
         "0",
+        "--no-js-runtimes",
+        "--js-runtimes",
+        "node",
         "--postprocessor-args",
-        "-ar 48000 -ac 2 -b:a 96k",
+        "ffmpeg:-ar 48000 -ac 2 -b:a 96k",
         url,
       ]);
 
@@ -126,19 +131,23 @@ class Player {
       });
 
       ytDlp.stderr.on("data", (data) => {
-        console.error(`yt-dlp error: ${data}`);
+        const output = data.toString();
+        stderr += output;
+        console.error(`yt-dlp error: ${output}`);
       });
 
       ytDlp.on("close", async (code) => {
         if (code !== 0 && code !== null) {
-          captureException(new Error(`yt-dlp exited with code ${code}`), {
+          const errorMessage = stderr.trim() || `yt-dlp exited with code ${code}`;
+
+          captureException(new Error(errorMessage), {
             tags: {
               function: "downloadAndPlayYouTubeAudio",
               url,
               code,
             },
           });
-          reject(new Error(`yt-dlp exited with code ${code}`));
+          reject(new Error(errorMessage));
           return;
         }
 
@@ -196,7 +205,26 @@ class Player {
 
     this.currentSong = song;
     queue.playing = true;
-    await this.downloadAndPlayYouTubeAudio(song.url);
+
+    try {
+      await this.downloadAndPlayYouTubeAudio(song.url);
+    } catch (error) {
+      queue.playing = false;
+      this.currentSong = null;
+
+      captureException(error, {
+        tags: {
+          function: "playNext",
+          url: song.url,
+        },
+      });
+
+      console.error(`Failed to play ${song.url}:`, error);
+
+      if (queue.queue.length > 0) {
+        await this.playNext();
+      }
+    }
   }
 
   /**
