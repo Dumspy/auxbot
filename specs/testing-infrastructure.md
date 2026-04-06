@@ -15,33 +15,42 @@ Auxbot currently has no test coverage. This spec establishes a Vitest-based test
 ### S1. Tooling & Configuration
 
 #### S1.1 Turborepo Per-Package Execution
+
 Each package/app runs its own Vitest instance via Turborepo. This enables:
+
 - Independent test execution per package (`pnpm --filter @auxbot/worker test`)
 - Parallel execution across packages in CI
 
 **Note:** Test caching is disabled (`"cache": false` in turbo.json) to avoid flakiness. Caching tests can cause issues when test files reference external state (mocks, filesystem, timers) that may have changed since the last run. Turbo provides parallelism, not caching for tests.
 
 **Acceptance criteria:**
+
 - `pnpm test` runs Turbo which executes each package's `vitest run`
 - `pnpm --filter <package> test` runs tests for a single package
 
 #### S1.2 Shared Base Config
+
 A root `vitest.base.ts` MUST provide shared defaults:
+
 - Node test environment
 - ESM module resolution
 - Standard reset behavior (`clearMocks`, `mockReset`, `restoreMocks`)
 - Coverage configuration (no thresholds enforced in v1)
 
 **Acceptance criteria:**
+
 - `vitest.base.ts` exists at repo root
 - Each project `vitest.config.ts` extends the base config
 
 #### S1.3 Per-Project Vitest Configs
+
 Each app/package MUST have `vitest.config.ts` extending base config with:
+
 - Include patterns for `src/**/*.test.ts` and `test/**/*.test.ts`
 - Per-project path aliases or setup files (if required)
 
 **Acceptance criteria:**
+
 - `apps/controller/vitest.config.ts` exists
 - `apps/worker/vitest.config.ts` exists
 - `packages/testkit/vitest.config.ts` exists
@@ -51,25 +60,28 @@ Each app/package MUST have `vitest.config.ts` extending base config with:
 ### S2. Test Layout & Conventions
 
 #### S2.1 Test File Location
+
 - **Colocated tests:** `*.test.ts` next to modules under `src/` (preferred for most tests that test a single module)
 - **Larger test suites:** `test/*.test.ts` for tests spanning multiple modules or integration-style tests
 
 All tests run together with `pnpm test`. No formal unit/integration distinction in the testing framework — goal is comprehensive coverage of all scenarios. The distinction is organizational: colocated for focused testing, `test/` for broader scenarios.
 
 **Basic test example:**
-```typescript
-import { describe, it, expect } from 'vitest';
 
-describe('Queue', () => {
-  it('should add items to queue', () => {
+```typescript
+import { describe, it, expect } from "vitest";
+
+describe("Queue", () => {
+  it("should add items to queue", () => {
     const queue = new Queue();
-    queue.add('song1');
+    queue.add("song1");
     expect(queue.size()).toBe(1);
   });
 });
 ```
 
 **Acceptance criteria:**
+
 - Tests discoverable via patterns `src/**/*.test.ts` and `test/**/*.test.ts`
 
 ---
@@ -81,11 +93,13 @@ Production code MUST NOT call hard-to-mock system/external APIs directly. It MUS
 **Note:** `process.exit()` is a Node built-in system call that terminates the program. It cannot be easily mocked with `vi.mock()` and must be wrapped in an injectable function for testability.
 
 **Key principles:**
+
 - Use existing library types directly (e.g., `@kubernetes/client-node`, `@discordjs/voice`)
 - Every setter MUST have a corresponding reset function for test isolation (forgot resets cause test contamination)
 - Use `node:` prefix for Node builtins (`node:fs`, `node:child_process`) for consistent ESM mocking
 
 **Flow:**
+
 ```
 Production code:  getCoreV1Api() → adapter → real K8s client
 Test code:        setCoreV1Api(mock) → adapter → mock K8s client
@@ -93,6 +107,7 @@ Test cleanup:      afterEach(() => resetCoreV1Api())
 ```
 
 #### S3.1 Kubernetes Adapter (Controller)
+
 Refactor K8s client creation to be injectable. **Two files need changes:**
 
 **1. `apps/controller/src/k8s.ts`** — currently creates clients at import time (lines 6–10)
@@ -100,6 +115,7 @@ Refactor K8s client creation to be injectable. **Two files need changes:**
 **2. `apps/controller/src/registry/worker-registry.ts`** — `WorkerRegistry` creates its own K8s client in constructor AND starts async work (`loadExistingWorkers`, `setInterval` for health checks)
 
 **Solution for k8s.ts:**
+
 ```typescript
 let coreV1Api: k8s.CoreV1Api | null = null;
 
@@ -122,23 +138,26 @@ export function resetCoreV1Api(): void {
 ```
 
 **Solution for WorkerRegistry:**
+
 - Accept `k8sApi` as constructor parameter (optional, defaults to creating one via `getCoreV1Api()`)
 - Defer `loadExistingWorkers()` and `startHealthChecks()` to explicit `init()` method
 - This allows tests to create `WorkerRegistry` without triggering K8s calls or timers
 - **Migration path:** Production code must call `registry.init()` after construction; this is a breaking change
 
 **Acceptance criteria:**
+
 - No K8s client created at import-time
 - Tests call `setCoreV1Api(mock)` + `afterEach(() => resetCoreV1Api())`
 - WorkerRegistry testable without real K8s or timers
 
 **Example test usage:**
-```typescript
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getCoreV1Api, setCoreV1Api, resetCoreV1Api } from './k8s.js';
-import { createMockCoreV1Api } from '@auxbot/testkit';
 
-describe('WorkerRegistry', () => {
+```typescript
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { getCoreV1Api, setCoreV1Api, resetCoreV1Api } from "./k8s.js";
+import { createMockCoreV1Api } from "@auxbot/testkit";
+
+describe("WorkerRegistry", () => {
   const mockK8sApi = createMockCoreV1Api();
 
   beforeEach(() => {
@@ -150,34 +169,37 @@ describe('WorkerRegistry', () => {
     vi.clearAllMocks();
   });
 
-  it('should register a new worker', async () => {
+  it("should register a new worker", async () => {
     const registry = new WorkerRegistry({ k8sApi: getCoreV1Api() });
 
     await registry.registerWorker({
-      guildId: '123',
-      podName: 'worker-123',
+      guildId: "123",
+      podName: "worker-123",
       lastSeen: Date.now(),
     });
 
-    expect(mockK8sApi.createNamespacedPod).toHaveBeenCalledWith('auxbot', expect.any(Object));
+    expect(mockK8sApi.createNamespacedPod).toHaveBeenCalledWith("auxbot", expect.any(Object));
   });
 });
 ```
 
 #### S3.2 Discord Voice Adapter (Worker)
+
 Voice operations in `player.ts` should be injectable for testing.
 
 **Acceptance criteria:**
+
 - `createPlayer(deps)` factory accepts voice-related dependencies
 - Tests can supply mock voice connection/player
 - Uses `@discordjs/voice` types directly
 
 **Example implementation:**
+
 ```typescript
 // apps/worker/src/player.ts
-import type { VoiceConnection, AudioPlayer, AudioResource } from '@discordjs/voice';
-import { createVoiceConnection as createDiscordVoiceConnection } from '@discordjs/voice';
-import { spawn } from 'node:child_process';
+import type { VoiceConnection, AudioPlayer, AudioResource } from "@discordjs/voice";
+import { createVoiceConnection as createDiscordVoiceConnection } from "@discordjs/voice";
+import { spawn } from "node:child_process";
 
 interface PlayerDeps {
   createVoiceConnection: (channelId: string, guildId: string) => VoiceConnection;
@@ -211,11 +233,12 @@ export function resetDefaultDeps(): void {
 ```
 
 **Example test usage:**
-```typescript
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { createPlayer, setDefaultDeps, resetDefaultDeps } from './player.js';
 
-describe('Player', () => {
+```typescript
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { createPlayer, setDefaultDeps, resetDefaultDeps } from "./player.js";
+
+describe("Player", () => {
   const mockAudioPlayer = { play: vi.fn(), stop: vi.fn() } as any;
   const mockDeps = {
     createAudioPlayer: () => mockAudioPlayer,
@@ -232,7 +255,7 @@ describe('Player', () => {
     vi.clearAllMocks();
   });
 
-  it('should create audio player with injected deps', () => {
+  it("should create audio player with injected deps", () => {
     const player = createPlayer();
     player.play({} as any);
 
@@ -242,12 +265,15 @@ describe('Player', () => {
 ```
 
 #### S3.3 System Wrappers (Worker)
+
 Wrap system calls to allow test substitution. Use `node:` prefix for ESM compatibility:
+
 - `spawn` → `vi.mock('node:child_process')`
 - `process.exit` → wrap in injectable function
 - `fs` operations → `vi.mock('node:fs')`
 
 **Acceptance criteria:**
+
 - Production code imports `node:child_process`, `node:fs` (not bare `fs`)
 - No direct `process.exit()` in testable code paths (wrap it)
 - Tests can mock via `vi.mock()` with matching specifiers
@@ -265,6 +291,7 @@ A new package `packages/testkit` MUST exist with shared testing utilities.
 **Testkit dependencies:** The testkit package may require type-only dependencies (e.g., `@kubernetes/client-node` for types) as devDependencies since it provides mock factories that return typed mocks.
 
 **Required modules:**
+
 - `packages/testkit/src/mocks/k8s.ts` — Mock K8s `CoreV1Api` with configurable responses
 - `packages/testkit/src/mocks/grpc-client.ts` — Mock gRPC client functions (`addSong`, `skipSong`, etc.)
 - `packages/testkit/src/helpers/index.ts` — Common test utilities (e.g., `flushPromises()`, `waitFor()`)
@@ -275,15 +302,16 @@ A new package `packages/testkit` MUST exist with shared testing utilities.
 #### S4.1 K8s Mock Implementation
 
 `packages/testkit/src/mocks/k8s.ts`:
+
 ```typescript
-import type { CoreV1Api } from '@kubernetes/client-node';
+import type { CoreV1Api } from "@kubernetes/client-node";
 
 export function createMockCoreV1Api(): CoreV1Api {
   return {
-    createNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: 'test-pod' } } }),
+    createNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: "test-pod" } } }),
     deleteNamespacedPod: vi.fn().mockResolvedValue({ body: {} }),
     listNamespacedPod: vi.fn().mockResolvedValue({ body: { items: [] } }),
-    readNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: 'test-pod' } } }),
+    readNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: "test-pod" } } }),
     patchNamespacedPod: vi.fn().mockResolvedValue({ body: {} }),
   } as any;
 }
@@ -292,8 +320,9 @@ export function createMockCoreV1Api(): CoreV1Api {
 #### S4.2 gRPC Client Mock Implementation
 
 `packages/testkit/src/mocks/grpc-client.ts`:
+
 ```typescript
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 let mockPlayerClient: ReturnType<typeof createMockPlayerClient> | null = null;
 
@@ -327,6 +356,7 @@ export function resetMockPlayerClient(): void {
 #### S4.3 Helper Implementation
 
 `packages/testkit/src/helpers/index.ts`:
+
 ```typescript
 export async function flushPromises(): Promise<void> {
   return new Promise((resolve) => {
@@ -336,7 +366,7 @@ export async function flushPromises(): Promise<void> {
 
 export function waitFor<T>(
   condition: () => T | undefined,
-  options: { timeout?: number; interval?: number } = {}
+  options: { timeout?: number; interval?: number } = {},
 ): Promise<T> {
   const { timeout = 5000, interval = 100 } = options;
   const startTime = Date.now();
@@ -362,6 +392,7 @@ export function waitFor<T>(
 ```
 
 **Acceptance criteria:**
+
 - Apps can import from `@auxbot/testkit` in tests
 - Mocks are minimal, deterministic, and typed
 - No circular dependencies between packages
@@ -371,15 +402,19 @@ export function waitFor<T>(
 ### S5. Commands & Turborepo Integration
 
 #### S5.1 Turborepo Pipeline
+
 `turbo.json` MUST define a `test` task pipeline.
 
 **Acceptance criteria:**
+
 - `pnpm test` runs via Turbo across all packages/apps
 
 #### S5.2 Scripts
+
 Root and each app/package MUST expose: `test`, `test:watch`
 
 **Supported commands:**
+
 ```bash
 pnpm test                                  # run all tests
 pnpm --filter @auxbot/controller test      # run controller tests only
@@ -399,6 +434,7 @@ The following example tests MUST exist to validate the testing infrastructure:
 - `apps/worker/test/player-lifecycle.test.ts` — tests player with mocked voice/spawn/timers
 
 **Acceptance criteria:**
+
 - Each test runs under `pnpm test`
 - Tests demonstrate using `@auxbot/testkit` mocks, `vi.mock()`, and fake timers
 - Tests are deterministic (no real K8s/Discord/process.exit)
@@ -408,6 +444,7 @@ The following example tests MUST exist to validate the testing infrastructure:
 ### S7. Documentation
 
 `TESTING.md` MUST exist and document:
+
 - Test file naming/layout conventions
 - Commands (root + filtered + watch)
 - Mocking recipes:
@@ -418,6 +455,7 @@ The following example tests MUST exist to validate the testing infrastructure:
 - How to add new mocks to testkit
 
 **Acceptance criteria:**
+
 - New contributor can add tests following documented conventions
 
 ---
@@ -469,6 +507,7 @@ TESTING.md
 ```
 
 **Note:** `pnpm-workspace.yaml` may need updates to include the new `packages/testkit` package.
+
 ```
 
 ---
@@ -684,3 +723,4 @@ TESTING.md
 - [Vitest documentation](https://vitest.dev/)
 - [Turborepo documentation](https://turbo.build/repo/docs)
 - [Auxbot AGENTS.md](./AGENTS.md) for project-specific conventions
+```

@@ -30,9 +30,9 @@ Design documentation for Auxbot, a microservices-based Discord bot built with Ty
 
 ## Testing
 
-| Spec                                                         | Implementation Plan                                              | Purpose                                        |
-| ------------------------------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
-| [testing-infrastructure.md](./testing-infrastructure.md)     | [testing-implementation-plan.md](./testing-implementation-plan.md) | Vitest monorepo testing foundation             |
+| Spec                                                     | Implementation Plan                                                | Purpose                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| [testing-infrastructure.md](./testing-infrastructure.md) | [testing-implementation-plan.md](./testing-implementation-plan.md) | Vitest monorepo testing foundation |
 
 ## Deployment
 

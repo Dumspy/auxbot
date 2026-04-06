@@ -23,8 +23,13 @@
   "packageManager": "pnpm@9.0.0",
   "pnpm": {
     "overrides": {
-      "tar": "^7.5.4",
-      "undici": "^6.23.0"
+      "tar": "^7.5.11",
+      "undici": "^6.24.0",
+      "minimatch": "^3.1.4",
+      "path-to-regexp": "^8.4.0",
+      "qs": "^6.14.2",
+      "lodash": "^4.18.0",
+      "brace-expansion": "^1.1.13"
     }
   }
 }
