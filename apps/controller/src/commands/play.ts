@@ -57,7 +57,10 @@ function createSuccessEmbed(isPlaying: boolean, title: string, artistText?: stri
 }
 
 function normalizeText(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function getTokens(value: string): string[] {
@@ -78,8 +81,12 @@ function scoreSearchResult(
   const normalizedTrackTitle = normalizeText(track.title);
   const titleTokens = getTokens(track.title);
   const artistTokens = getTokens(track.artistText);
-  const matchedTitleTokens = titleTokens.filter((token) => normalizedResultTitle.includes(token)).length;
-  const matchedArtistTokens = artistTokens.filter((token) => normalizedResultTitle.includes(token)).length;
+  const matchedTitleTokens = titleTokens.filter((token) =>
+    normalizedResultTitle.includes(token),
+  ).length;
+  const matchedArtistTokens = artistTokens.filter((token) =>
+    normalizedResultTitle.includes(token),
+  ).length;
   const spotifyDuration = Math.round(track.durationMs / 1000);
   const durationDiff = result.duration > 0 ? Math.abs(result.duration - spotifyDuration) : null;
 
@@ -107,7 +114,10 @@ function scoreSearchResult(
   }
 
   for (const filteredTerm of FILTERED_TERMS) {
-    if (normalizedResultTitle.includes(filteredTerm) && !normalizedTrackTitle.includes(filteredTerm)) {
+    if (
+      normalizedResultTitle.includes(filteredTerm) &&
+      !normalizedTrackTitle.includes(filteredTerm)
+    ) {
       score -= 2;
     }
   }
@@ -207,7 +217,9 @@ async function showSearchMenu(state: SearchState): Promise<void> {
 
   if (!state.interaction.channel) {
     await state.interaction.editReply({
-      embeds: [new EmbedBuilder().setTitle("Cannot show interactive menu here").setColor("#ff0000")],
+      embeds: [
+        new EmbedBuilder().setTitle("Cannot show interactive menu here").setColor("#ff0000"),
+      ],
       components: [],
     });
     return;
@@ -375,7 +387,10 @@ async function updateSearchResults(state: SearchState): Promise<void> {
   }
 }
 
-async function handleSpotifySong(interaction: ChatInputCommandInteraction, songInput: string): Promise<void> {
+async function handleSpotifySong(
+  interaction: ChatInputCommandInteraction,
+  songInput: string,
+): Promise<void> {
   let track: SpotifyTrackMetadata;
 
   try {
@@ -393,9 +408,14 @@ async function handleSpotifySong(interaction: ChatInputCommandInteraction, songI
         });
       }
 
-      const title = error.code === "unsupported_type" ? "Unsupported Spotify link" : "Failed to resolve Spotify track";
+      const title =
+        error.code === "unsupported_type"
+          ? "Unsupported Spotify link"
+          : "Failed to resolve Spotify track";
       await interaction.editReply({
-        embeds: [new EmbedBuilder().setTitle(title).setDescription(error.message).setColor("#ff0000")],
+        embeds: [
+          new EmbedBuilder().setTitle(title).setDescription(error.message).setColor("#ff0000"),
+        ],
       });
       return;
     }
@@ -428,7 +448,9 @@ async function handleSpotifySong(interaction: ChatInputCommandInteraction, songI
         embeds: [
           new EmbedBuilder()
             .setTitle("No playable match found")
-            .setDescription(`I couldn't find a playable YouTube match for ${track.title} - ${track.artistText}.`)
+            .setDescription(
+              `I couldn't find a playable YouTube match for ${track.title} - ${track.artistText}.`,
+            )
             .setColor("#ff0000"),
         ],
       });

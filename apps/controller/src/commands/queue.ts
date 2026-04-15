@@ -3,7 +3,12 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { getQueueStatus } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
-function formatQueueItem(title: string, artistText: string, url: string, requesterId: string): string {
+function formatQueueItem(
+  title: string,
+  artistText: string,
+  url: string,
+  requesterId: string,
+): string {
   const label = title ? `${title}${artistText ? ` - ${artistText}` : ""}` : "Link";
   return `[${label}](${url}) | Requested by <@${requesterId}>`;
 }

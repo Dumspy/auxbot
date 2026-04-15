@@ -25,10 +25,7 @@ function createPlayerClient(guildId: string): PlayerClient {
   return createGrpcClient(PlayerClient, guildId);
 }
 
-export async function addSong(
-  guildId: string,
-  song: AddSongInput,
-): Promise<AddSongResponse> {
+export async function addSong(guildId: string, song: AddSongInput): Promise<AddSongResponse> {
   return new Promise((resolve, reject) => {
     const client = createPlayerClient(guildId);
     const request = {

@@ -25,7 +25,15 @@ export class SpotifyResolveError extends Error {
 }
 
 export function isSpotifyInput(input: string): boolean {
-  return input.indexOf("spotify:") === 0 || input.indexOf("open.spotify.com/") !== -1;
+  if (input.indexOf("spotify:") === 0) {
+    return true;
+  }
+
+  try {
+    return new URL(input).hostname === "open.spotify.com";
+  } catch {
+    return false;
+  }
 }
 
 export async function resolveSpotifyTrack(input: string): Promise<SpotifyTrackMetadata> {
@@ -119,7 +127,9 @@ function parseSpotifyTrackId(input: string): string | null {
 }
 
 function extractNextDataPayload(html: string): unknown {
-  const match = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+  const match = html.match(
+    /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/,
+  );
   const payload = match?.[1];
 
   if (!payload) {
@@ -196,10 +206,7 @@ function getThumbnailUrl(entity: Record<string, unknown>): string {
   return "";
 }
 
-function getNestedObject(
-  value: unknown,
-  path: string[],
-): Record<string, unknown> | null {
+function getNestedObject(value: unknown, path: string[]): Record<string, unknown> | null {
   let current: unknown = value;
 
   for (const key of path) {
