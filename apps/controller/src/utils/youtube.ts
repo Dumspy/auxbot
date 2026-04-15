@@ -26,11 +26,7 @@ export function getYouTubeInputKind(input: string): YouTubeInputKind | null {
     return url.pathname.length > 1 ? "video" : null;
   }
 
-  if (![
-    "youtube.com",
-    "music.youtube.com",
-    "m.youtube.com",
-  ].includes(hostname)) {
+  if (!["youtube.com", "music.youtube.com", "m.youtube.com"].includes(hostname)) {
     return null;
   }
 

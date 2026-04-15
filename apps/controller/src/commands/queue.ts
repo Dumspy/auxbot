@@ -41,7 +41,10 @@ function buildQueueFieldValue(lines: string[]): string {
   let value = shownLines.join("\n");
 
   if (value.length + suffix.length > MAX_QUEUE_FIELD_LENGTH) {
-    while (shownLines.length > 0 && `${shownLines.join("\n")}${suffix}`.length > MAX_QUEUE_FIELD_LENGTH) {
+    while (
+      shownLines.length > 0 &&
+      `${shownLines.join("\n")}${suffix}`.length > MAX_QUEUE_FIELD_LENGTH
+    ) {
       shownLines.pop();
     }
 
@@ -90,11 +93,10 @@ registerInteraction({
       }
 
       if (response.items.length > 0) {
-        const queueLines = response.items
-          .map(
-            (item, index) =>
-              `${index + 1}. ${formatQueueItem(item.title, item.artistText, item.url, item.requesterId)}`,
-          );
+        const queueLines = response.items.map(
+          (item, index) =>
+            `${index + 1}. ${formatQueueItem(item.title, item.artistText, item.url, item.requesterId)}`,
+        );
 
         embed.addFields({ name: "📋 Queue", value: buildQueueFieldValue(queueLines) });
       } else {

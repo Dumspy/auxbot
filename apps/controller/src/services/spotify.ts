@@ -52,11 +52,17 @@ export async function resolveSpotifyTrack(input: string): Promise<SpotifyTrackMe
   const parsedInput = parseSpotifyInput(input);
 
   if (!parsedInput) {
-    throw new SpotifyResolveError("invalid_url", "Only Spotify track and playlist links are supported.");
+    throw new SpotifyResolveError(
+      "invalid_url",
+      "Only Spotify track and playlist links are supported.",
+    );
   }
 
   if (parsedInput.kind !== "track") {
-    throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported here.");
+    throw new SpotifyResolveError(
+      "unsupported_type",
+      "Only Spotify track links are supported here.",
+    );
   }
 
   const payload = await fetchSpotifyEmbedEntity(parsedInput.kind, parsedInput.id);
@@ -76,11 +82,17 @@ export async function resolveSpotifyPlaylist(input: string): Promise<SpotifyPlay
   const parsedInput = parseSpotifyInput(input);
 
   if (!parsedInput) {
-    throw new SpotifyResolveError("invalid_url", "Only Spotify track and playlist links are supported.");
+    throw new SpotifyResolveError(
+      "invalid_url",
+      "Only Spotify track and playlist links are supported.",
+    );
   }
 
   if (parsedInput.kind !== "playlist") {
-    throw new SpotifyResolveError("unsupported_type", "Only Spotify playlist links are supported here.");
+    throw new SpotifyResolveError(
+      "unsupported_type",
+      "Only Spotify playlist links are supported here.",
+    );
   }
 
   const payload = await fetchSpotifyEmbedEntity(parsedInput.kind, parsedInput.id);

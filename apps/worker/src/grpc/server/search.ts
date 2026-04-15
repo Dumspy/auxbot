@@ -243,7 +243,10 @@ async function resolvePlaylistWithYtDlp(
       try {
         const parsed = JSON.parse(stdout) as YtDlpPlaylistResult;
         const entries = Array.isArray(parsed.entries) ? parsed.entries : [];
-        const items = entries.map(mapResult).filter((item) => item.url.length > 0).slice(0, limit);
+        const items = entries
+          .map(mapResult)
+          .filter((item) => item.url.length > 0)
+          .slice(0, limit);
 
         resolve({
           title: parsed.title ?? "",
