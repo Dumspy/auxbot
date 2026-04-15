@@ -10,7 +10,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 import { existsSync } from "fs";
 import { unlink } from "fs/promises";
-import { queue } from "./queue.js";
+import { queue, type QueueItem } from "./queue.js";
 import { env } from "./env.js";
 import { notifyShutdown } from "./grpc/client/worker_lifecycle.js";
 import { getVoiceConnection } from "./index.js";
@@ -18,7 +18,7 @@ import { captureException } from "@auxbot/sentry";
 
 class Player {
   private player = createAudioPlayer();
-  private currentSong: { url: string; requesterId: string } | null = null;
+  private currentSong: QueueItem | null = null;
   private volume = 0.5; // 50% volume
   private lastActivityTime: number = Date.now();
   private inactivityCheckInterval: ReturnType<typeof setInterval>;
@@ -201,13 +201,13 @@ class Player {
       console.log("No song to play");
       return;
     }
-    console.log(`Now playing: ${song.url}`);
+    console.log(`Now playing: ${song.playbackUrl}`);
 
     this.currentSong = song;
     queue.playing = true;
 
     try {
-      await this.downloadAndPlayYouTubeAudio(song.url);
+      await this.downloadAndPlayYouTubeAudio(song.playbackUrl);
     } catch (error) {
       queue.playing = false;
       this.currentSong = null;
@@ -215,11 +215,11 @@ class Player {
       captureException(error, {
         tags: {
           function: "playNext",
-          url: song.url,
+          url: song.playbackUrl,
         },
       });
 
-      console.error(`Failed to play ${song.url}:`, error);
+      console.error(`Failed to play ${song.playbackUrl}:`, error);
 
       if (queue.queue.length > 0) {
         await this.playNext();

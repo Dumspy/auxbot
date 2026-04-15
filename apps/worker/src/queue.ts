@@ -1,5 +1,11 @@
-interface QueueItem {
+import { SongSource } from "@auxbot/protos/player";
+
+export interface QueueItem {
   url: string;
+  playbackUrl: string;
+  title: string;
+  artistText: string;
+  source: SongSource;
   requesterId: string;
 }
 
@@ -7,10 +13,10 @@ class Queue {
   queue: QueueItem[] = [];
   playing: boolean = false;
 
-  add(url: string, requesterId: string): number {
+  add(item: QueueItem): number {
     const queuePosition = this.queue.length;
 
-    this.queue.push({ url, requesterId });
+    this.queue.push(item);
 
     return queuePosition;
   }

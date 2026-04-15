@@ -1,4 +1,7 @@
 import { registerInteraction } from "@auxbot/discord/interaction";
+import { SongSource } from "@auxbot/protos/player";
+import type { SearchYouTubeResponse } from "@auxbot/protos/search";
+import { captureException } from "@auxbot/sentry";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -11,29 +14,155 @@ import {
 } from "discord.js";
 import { addSong } from "../grpc/client/player.js";
 import { searchYouTube } from "../grpc/client/search.js";
-import type { SearchYouTubeResponse } from "@auxbot/protos/search";
 import { workerRegistry } from "../k8s.js";
+import {
+  SpotifyResolveError,
+  isSpotifyInput,
+  resolveSpotifyTrack,
+  type SpotifyTrackMetadata,
+} from "../services/spotify.js";
 import { formatDuration, isYouTubeUrl } from "../utils/youtube.js";
-import { captureException } from "@auxbot/sentry";
 
 const PAGE_SIZE = 5;
 const INTERACTION_TIMEOUT_MS = 30_000;
+const FILTERED_TERMS = ["live", "karaoke", "instrumental", "cover", "remix", "nightcore"];
+
+interface SelectedSongMetadata {
+  sourceUrl: string;
+  title: string;
+  artistText: string;
+  source: SongSource;
+}
 
 interface SearchState {
   results: SearchYouTubeResponse["results"];
   page: number;
   query: string;
+  searchLabel: string;
   guildId: string;
   userId: string;
   interaction: ChatInputCommandInteraction;
   hasMore: boolean;
   sessionId: string;
+  selectedSongMetadata?: SelectedSongMetadata;
+}
+
+function createSuccessEmbed(isPlaying: boolean, title: string, artistText?: string): EmbedBuilder {
+  const description = artistText ? `${title} - ${artistText}` : title;
+
+  return new EmbedBuilder()
+    .setTitle(isPlaying ? "Now Playing" : "Added to Queue")
+    .setDescription(description)
+    .setColor(isPlaying ? "#00ff00" : "#ffff00");
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function getTokens(value: string): string[] {
+  return normalizeText(value)
+    .split(" ")
+    .filter((token) => token.length > 1);
+}
+
+function buildSpotifySearchQuery(track: SpotifyTrackMetadata): string {
+  return `${track.artistText} - ${track.title} audio`;
+}
+
+function scoreSearchResult(
+  track: SpotifyTrackMetadata,
+  result: SearchYouTubeResponse["results"][number],
+): number {
+  const normalizedResultTitle = normalizeText(result.title);
+  const normalizedTrackTitle = normalizeText(track.title);
+  const titleTokens = getTokens(track.title);
+  const artistTokens = getTokens(track.artistText);
+  const matchedTitleTokens = titleTokens.filter((token) =>
+    normalizedResultTitle.includes(token),
+  ).length;
+  const matchedArtistTokens = artistTokens.filter((token) =>
+    normalizedResultTitle.includes(token),
+  ).length;
+  const spotifyDuration = Math.round(track.durationMs / 1000);
+  const durationDiff = result.duration > 0 ? Math.abs(result.duration - spotifyDuration) : null;
+
+  let score = 0;
+
+  score += matchedTitleTokens * 2;
+  score += matchedArtistTokens;
+
+  if (matchedTitleTokens === 0) {
+    score -= 4;
+  }
+
+  if (matchedArtistTokens === 0) {
+    score -= 2;
+  }
+
+  if (durationDiff !== null) {
+    if (durationDiff <= 5) {
+      score += 3;
+    } else if (durationDiff <= 15) {
+      score += 1;
+    } else if (durationDiff >= 45) {
+      score -= 3;
+    }
+  }
+
+  for (const filteredTerm of FILTERED_TERMS) {
+    if (
+      normalizedResultTitle.includes(filteredTerm) &&
+      !normalizedTrackTitle.includes(filteredTerm)
+    ) {
+      score -= 2;
+    }
+  }
+
+  return score;
+}
+
+function findConfidentSpotifyMatch(
+  track: SpotifyTrackMetadata,
+  results: SearchYouTubeResponse["results"],
+): SearchYouTubeResponse["results"][number] | null {
+  const scoredResults = results
+    .map((result) => ({ result, score: scoreSearchResult(track, result) }))
+    .sort((left, right) => right.score - left.score);
+
+  const bestResult = scoredResults[0];
+
+  if (!bestResult || bestResult.score < 4) {
+    return null;
+  }
+
+  return bestResult.result;
+}
+
+function buildSongPayload(
+  userId: string,
+  result: SearchYouTubeResponse["results"][number],
+  metadata?: SelectedSongMetadata,
+) {
+  return {
+    playbackUrl: result.url,
+    requesterId: userId,
+    sourceUrl: metadata?.sourceUrl || result.url,
+    title: metadata?.title || result.title,
+    artistText: metadata?.artistText || result.uploader,
+    source: metadata?.source ?? SongSource.SONG_SOURCE_YOUTUBE,
+  };
 }
 
 async function showSearchMenu(state: SearchState): Promise<void> {
-  const { results, page, query, hasMore } = state;
+  const { results, page, searchLabel, hasMore } = state;
 
-  const embed = new EmbedBuilder().setTitle(`Search Results for: "${query}"`).setColor("#0099ff");
+  const embed = new EmbedBuilder()
+    .setTitle(`Search Results for: "${searchLabel}"`)
+    .setColor("#0099ff");
 
   if (results.length === 0) {
     embed.setDescription("No results found.");
@@ -41,7 +170,7 @@ async function showSearchMenu(state: SearchState): Promise<void> {
     return;
   }
 
-  results.forEach((result: SearchYouTubeResponse["results"][number], index: number) => {
+  results.forEach((result, index) => {
     embed.addFields({
       name: `${page * PAGE_SIZE + index + 1}. ${result.title}`,
       value: `Duration: ${result.duration != null ? formatDuration(result.duration) : "Live"} | Uploader: ${result.uploader}`,
@@ -50,12 +179,11 @@ async function showSearchMenu(state: SearchState): Promise<void> {
 
   embed.setFooter({ text: `Page ${page + 1}` });
 
-  const selectButtons = results.map(
-    (result: SearchYouTubeResponse["results"][number], index: number) =>
-      new ButtonBuilder()
-        .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
-        .setLabel(`${page * PAGE_SIZE + index + 1}`)
-        .setStyle(ButtonStyle.Primary),
+  const selectButtons = results.map((_, index) =>
+    new ButtonBuilder()
+      .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
+      .setLabel(`${page * PAGE_SIZE + index + 1}`)
+      .setStyle(ButtonStyle.Primary),
   );
 
   const navigationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -100,14 +228,14 @@ async function showSearchMenu(state: SearchState): Promise<void> {
   const collector = replyMessage.createMessageComponentCollector({
     componentType: ComponentType.Button,
     time: INTERACTION_TIMEOUT_MS,
-    filter: (i) => i.user.id === state.userId && i.customId.startsWith(state.sessionId),
+    filter: (interaction) =>
+      interaction.user.id === state.userId && interaction.customId.startsWith(state.sessionId),
   });
 
   collector.on("collect", async (buttonInteraction: ButtonInteraction) => {
     await buttonInteraction.deferUpdate();
 
-    const customId = buttonInteraction.customId;
-    const customIdSuffix = customId.replace(`${state.sessionId}_`, "");
+    const customIdSuffix = buttonInteraction.customId.replace(`${state.sessionId}_`, "");
 
     if (customIdSuffix === "cancel") {
       await state.interaction.editReply({
@@ -132,100 +260,93 @@ async function showSearchMenu(state: SearchState): Promise<void> {
       return;
     }
 
-    if (customIdSuffix.startsWith("select_")) {
-      const selectedIndex = Number.parseInt(customIdSuffix.split("_")[1] ?? "0", 10);
-      const selectedResult = results.find(
-        (_: SearchYouTubeResponse["results"][number], i: number) =>
-          i + page * PAGE_SIZE === selectedIndex,
-      );
+    if (!customIdSuffix.startsWith("select_")) {
+      return;
+    }
 
-      const disabledSelectButtons = results.map(
-        (result: SearchYouTubeResponse["results"][number], index: number) =>
-          new ButtonBuilder()
-            .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
-            .setLabel(`${index + 1}`)
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true),
-      );
+    const selectedIndex = Number.parseInt(customIdSuffix.split("_")[1] ?? "0", 10);
+    const selectedResult = results.find((_, index) => index + page * PAGE_SIZE === selectedIndex);
+    const disabledSelectButtons = results.map((_, index) =>
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_select_${page * PAGE_SIZE + index}`)
+        .setLabel(`${page * PAGE_SIZE + index + 1}`)
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true),
+    );
+    const disabledNavigationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_prev`)
+        .setLabel("Previous")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_page`)
+        .setLabel(`Page ${page + 1}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_next`)
+        .setLabel("Next")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`${state.sessionId}_cancel`)
+        .setLabel("Cancel")
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(true),
+    );
+    const disabledSelectRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      disabledSelectButtons,
+    );
 
-      const disabledNavigationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`${state.sessionId}_prev`)
-          .setLabel("Previous")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId(`${state.sessionId}_page`)
-          .setLabel(`Page ${page + 1}`)
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId(`${state.sessionId}_next`)
-          .setLabel("Next")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId(`${state.sessionId}_cancel`)
-          .setLabel("Cancel")
-          .setStyle(ButtonStyle.Danger)
-          .setDisabled(true),
-      );
+    await state.interaction.editReply({
+      embeds: [embed],
+      components: [disabledSelectRow, disabledNavigationButtons],
+    });
 
-      const disabledSelectRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        disabledSelectButtons,
-      );
+    if (!selectedResult) {
+      await state.interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Failed to select song")
+            .setDescription("The selected result could not be found.")
+            .setColor("#ff0000"),
+        ],
+        components: [],
+      });
+      collector.stop();
+      return;
+    }
+
+    try {
+      const song = buildSongPayload(state.userId, selectedResult, state.selectedSongMetadata);
+      const response = await addSong(state.guildId, song);
 
       await state.interaction.editReply({
-        embeds: [embed],
-        components: [disabledSelectRow, disabledNavigationButtons],
+        embeds: [createSuccessEmbed(response.isPlaying, song.title, song.artistText)],
+        components: [],
       });
-
-      if (selectedResult) {
-        try {
-          const response = await addSong(state.guildId, selectedResult.url, state.userId);
-
-          await state.interaction.editReply({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle(response.isPlaying ? "Now Playing" : "Added to Queue")
-                .setDescription(selectedResult.title)
-                .setColor(response.isPlaying ? "#00ff00" : "#ffff00"),
-            ],
-            components: [],
-          });
-        } catch (error) {
-          captureException(error, {
-            tags: {
-              guildId: state.guildId,
-              userId: state.userId,
-              url: selectedResult.url,
-              action: "add_song",
-            },
-          });
-          await state.interaction.editReply({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle("Failed to add song")
-                .setDescription("Please try again later.")
-                .setColor("#ff0000"),
-            ],
-            components: [],
-          });
-        }
-      } else {
-        await state.interaction.editReply({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("Failed to select song")
-              .setDescription("The selected result could not be found.")
-              .setColor("#ff0000"),
-          ],
-          components: [],
-        });
-      }
-
-      collector.stop();
+    } catch (error) {
+      captureException(error, {
+        tags: {
+          guildId: state.guildId,
+          userId: state.userId,
+          url: selectedResult.url,
+          action: "add_song",
+        },
+      });
+      await state.interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Failed to add song")
+            .setDescription("Please try again later.")
+            .setColor("#ff0000"),
+        ],
+        components: [],
+      });
     }
+
+    collector.stop();
   });
 
   collector.on("end", async (_: unknown, reason: string) => {
@@ -266,6 +387,132 @@ async function updateSearchResults(state: SearchState): Promise<void> {
   }
 }
 
+async function handleSpotifySong(
+  interaction: ChatInputCommandInteraction,
+  songInput: string,
+): Promise<void> {
+  let track: SpotifyTrackMetadata;
+
+  try {
+    track = await resolveSpotifyTrack(songInput);
+  } catch (error) {
+    if (error instanceof SpotifyResolveError) {
+      if (error.code === "fetch_failed" || error.code === "invalid_payload") {
+        captureException(error, {
+          tags: {
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            url: songInput,
+            action: "resolve_spotify_track",
+          },
+        });
+      }
+
+      const title =
+        error.code === "unsupported_type"
+          ? "Unsupported Spotify link"
+          : "Failed to resolve Spotify track";
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder().setTitle(title).setDescription(error.message).setColor("#ff0000"),
+        ],
+      });
+      return;
+    }
+
+    captureException(error, {
+      tags: {
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        url: songInput,
+        action: "resolve_spotify_track",
+      },
+    });
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Failed to resolve Spotify track")
+          .setDescription("Please try again later.")
+          .setColor("#ff0000"),
+      ],
+    });
+    return;
+  }
+
+  try {
+    const query = buildSpotifySearchQuery(track);
+    const response = await searchYouTube(interaction.guildId!, query, 0, PAGE_SIZE);
+
+    if (response.results.length === 0) {
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("No playable match found")
+            .setDescription(
+              `I couldn't find a playable YouTube match for ${track.title} - ${track.artistText}.`,
+            )
+            .setColor("#ff0000"),
+        ],
+      });
+      return;
+    }
+
+    const matchedResult = findConfidentSpotifyMatch(track, response.results);
+
+    if (matchedResult) {
+      const song = buildSongPayload(interaction.user.id, matchedResult, {
+        sourceUrl: track.sourceUrl,
+        title: track.title,
+        artistText: track.artistText,
+        source: SongSource.SONG_SOURCE_SPOTIFY,
+      });
+      const addSongResponse = await addSong(interaction.guildId!, song);
+
+      await interaction.editReply({
+        embeds: [createSuccessEmbed(addSongResponse.isPlaying, track.title, track.artistText)],
+      });
+      return;
+    }
+
+    const state: SearchState = {
+      results: response.results,
+      page: 0,
+      query,
+      searchLabel: `${track.title} - ${track.artistText}`,
+      guildId: interaction.guildId!,
+      userId: interaction.user.id,
+      interaction,
+      hasMore: response.hasMore,
+      sessionId: `${interaction.id}-${Date.now()}`,
+      selectedSongMetadata: {
+        sourceUrl: track.sourceUrl,
+        title: track.title,
+        artistText: track.artistText,
+        source: SongSource.SONG_SOURCE_SPOTIFY,
+      },
+    };
+
+    await showSearchMenu(state);
+  } catch (error) {
+    captureException(error, {
+      tags: {
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        url: songInput,
+        action: "search_spotify_match",
+      },
+    });
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Failed to match Spotify track")
+          .setDescription("Please try again later.")
+          .setColor("#ff0000"),
+      ],
+    });
+  }
+}
+
 registerInteraction({
   data: new SlashCommandBuilder()
     .setName("play")
@@ -273,7 +520,7 @@ registerInteraction({
     .addStringOption((option) =>
       option
         .setName("song")
-        .setDescription("The url of song to play or search query")
+        .setDescription("The URL of song to play or search query")
         .setRequired(true),
     ) as SlashCommandBuilder,
   async execute(interaction) {
@@ -290,10 +537,16 @@ registerInteraction({
       return;
     }
 
+    await interaction.deferReply();
+
     if (isYouTubeUrl(songInput)) {
       try {
-        await interaction.deferReply();
-        const response = await addSong(interaction.guildId, songInput, interaction.user.id);
+        const response = await addSong(interaction.guildId, {
+          playbackUrl: songInput,
+          requesterId: interaction.user.id,
+          sourceUrl: songInput,
+          source: SongSource.SONG_SOURCE_YOUTUBE,
+        });
         await interaction.editReply(response.isPlaying ? "Now playing" : "Added to queue");
       } catch (error) {
         captureException(error, {
@@ -304,38 +557,43 @@ registerInteraction({
             action: "add_song_direct",
           },
         });
-        await interaction.reply("Failed to add song. Please try again later.");
+        await interaction.editReply("Failed to add song. Please try again later.");
       }
-    } else {
-      await interaction.deferReply();
+      return;
+    }
 
-      const state: SearchState = {
-        results: [],
-        page: 0,
-        query: songInput,
-        guildId: interaction.guildId,
-        userId: interaction.user.id,
-        interaction,
-        hasMore: false,
-        sessionId: `${interaction.id}-${Date.now()}`,
-      };
+    if (isSpotifyInput(songInput)) {
+      await handleSpotifySong(interaction, songInput);
+      return;
+    }
 
-      try {
-        const response = await searchYouTube(interaction.guildId, songInput, 0, PAGE_SIZE);
-        state.results = response.results;
-        state.hasMore = response.hasMore;
-        await showSearchMenu(state);
-      } catch (error) {
-        captureException(error, {
-          tags: {
-            guildId: interaction.guildId,
-            userId: interaction.user.id,
-            query: songInput,
-            action: "search_youtube_initial",
-          },
-        });
-        await interaction.editReply("Failed to search. Please try again later.");
-      }
+    const state: SearchState = {
+      results: [],
+      page: 0,
+      query: songInput,
+      searchLabel: songInput,
+      guildId: interaction.guildId,
+      userId: interaction.user.id,
+      interaction,
+      hasMore: false,
+      sessionId: `${interaction.id}-${Date.now()}`,
+    };
+
+    try {
+      const response = await searchYouTube(interaction.guildId, songInput, 0, PAGE_SIZE);
+      state.results = response.results;
+      state.hasMore = response.hasMore;
+      await showSearchMenu(state);
+    } catch (error) {
+      captureException(error, {
+        tags: {
+          guildId: interaction.guildId,
+          userId: interaction.user.id,
+          query: songInput,
+          action: "search_youtube_initial",
+        },
+      });
+      await interaction.editReply("Failed to search. Please try again later.");
     }
   },
 });

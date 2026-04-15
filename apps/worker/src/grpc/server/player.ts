@@ -15,6 +15,7 @@ import {
   QueueStatusResponse,
   ResumeRequest,
   ResumeResponse,
+  SongSource,
   SkipRequest,
   SkipResponse,
 } from "@auxbot/protos/player";
@@ -43,9 +44,16 @@ registerService<PlayerService, PlayerServer>(PlayerService, {
     call: grpc.ServerUnaryCall<AddSongRequest, AddSongResponse>,
     callback: grpc.sendUnaryData<AddSongResponse>,
   ): void {
-    const { url, requesterId } = call.request;
+    const { playbackUrl, requesterId, sourceUrl, title, artistText, source } = call.request;
 
-    const queuePosition = queue.add(url, requesterId);
+    const queuePosition = queue.add({
+      url: sourceUrl || playbackUrl,
+      playbackUrl,
+      title,
+      artistText,
+      source,
+      requesterId,
+    });
 
     const response = {
       success: true,
@@ -109,11 +117,19 @@ registerService<PlayerService, PlayerServer>(PlayerService, {
       const response: QueueStatusResponse = {
         items: queue.queue.map((item) => ({
           url: item.url,
+          playbackUrl: item.playbackUrl,
           requesterId: item.requesterId,
+          title: item.title,
+          artistText: item.artistText,
+          source: item.source,
         })),
         isPlaying: queue.playing,
         nowPlayingUrl: status.currentSong?.url || "",
         nowPlayingRequester: status.currentSong?.requesterId || "",
+        nowPlayingPlaybackUrl: status.currentSong?.playbackUrl || "",
+        nowPlayingTitle: status.currentSong?.title || "",
+        nowPlayingArtistText: status.currentSong?.artistText || "",
+        nowPlayingSource: status.currentSong?.source ?? SongSource.SONG_SOURCE_UNSPECIFIED,
       };
 
       callback(null, response);
@@ -178,6 +194,10 @@ registerService<PlayerService, PlayerServer>(PlayerService, {
         requesterId: status.currentSong?.requesterId || "",
         hasQueue: status.hasQueue,
         queueLength: status.queueLength,
+        currentPlaybackUrl: status.currentSong?.playbackUrl || "",
+        currentTitle: status.currentSong?.title || "",
+        currentArtistText: status.currentSong?.artistText || "",
+        currentSource: status.currentSong?.source ?? SongSource.SONG_SOURCE_UNSPECIFIED,
       };
 
       callback(null, response);
