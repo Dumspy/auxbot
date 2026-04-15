@@ -119,7 +119,25 @@ function parseSpotifyTrackId(input: string): string | null {
     return null;
   }
 
-  if (pathParts[0] !== "track") {
+  const firstPathPart = pathParts[0];
+
+  if (!firstPathPart) {
+    return null;
+  }
+
+  if (firstPathPart === "track") {
+    return pathParts[1] || null;
+  }
+
+  if (pathParts.length >= 3 && firstPathPart.startsWith("intl-") && pathParts[1] === "track") {
+    return pathParts[2] || null;
+  }
+
+  if (firstPathPart.startsWith("intl-")) {
+    throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported.");
+  }
+
+  if (firstPathPart !== "track") {
     throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported.");
   }
 

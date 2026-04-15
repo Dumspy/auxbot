@@ -1,5 +1,5 @@
 import { registerInteraction } from "@auxbot/discord/interaction";
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder, escapeMarkdown } from "discord.js";
 import { getQueueStatus } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
@@ -10,7 +10,7 @@ function formatQueueItem(
   requesterId: string,
 ): string {
   const label = title ? `${title}${artistText ? ` - ${artistText}` : ""}` : "Link";
-  return `[${label}](${url}) | Requested by <@${requesterId}>`;
+  return `[${escapeMarkdown(label)}](${url}) | Requested by <@${requesterId}>`;
 }
 
 registerInteraction({
