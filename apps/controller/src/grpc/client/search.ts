@@ -1,5 +1,9 @@
 import { Metadata } from "@grpc/grpc-js";
-import { SearchClient, SearchYouTubeResponse } from "@auxbot/protos/search";
+import {
+  ResolveYouTubePlaylistResponse,
+  SearchClient,
+  SearchYouTubeResponse,
+} from "@auxbot/protos/search";
 import { captureException } from "@auxbot/sentry";
 import { createGrpcClient } from "./common.js";
 
@@ -31,6 +35,42 @@ export async function searchYouTube(
           reject(error);
           return;
         }
+        client.close();
+        resolve(response);
+      },
+    );
+  });
+}
+
+export async function resolveYouTubePlaylist(
+  guildId: string,
+  url: string,
+  offset: number,
+  limit: number,
+): Promise<ResolveYouTubePlaylistResponse> {
+  return new Promise((resolve, reject) => {
+    const client = createGrpcClient(SearchClient, guildId);
+    const request = { url, offset, limit };
+
+    client.resolveYouTubePlaylist(
+      request,
+      new Metadata(),
+      { deadline: new Date(Date.now() + 10000) },
+      (error, response) => {
+        if (error) {
+          captureException(error, {
+            tags: {
+              guildId,
+              url,
+              offset,
+              limit,
+            },
+          });
+          client.close();
+          reject(error);
+          return;
+        }
+
         client.close();
         resolve(response);
       },

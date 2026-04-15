@@ -1,12 +1,28 @@
-export interface SpotifyTrackMetadata {
-  trackId: string;
+export interface SpotifyBaseTrackMetadata {
   sourceUrl: string;
   title: string;
-  artists: string[];
   artistText: string;
   durationMs: number;
+}
+
+export interface SpotifyTrackMetadata extends SpotifyBaseTrackMetadata {
+  trackId: string;
+  artists: string[];
   thumbnailUrl: string;
 }
+
+export interface SpotifyPlaylistTrackMetadata extends SpotifyBaseTrackMetadata {
+  trackId: string;
+}
+
+export interface SpotifyPlaylistMetadata {
+  playlistId: string;
+  sourceUrl: string;
+  title: string;
+  tracks: SpotifyPlaylistTrackMetadata[];
+}
+
+export type SpotifyInputKind = "track" | "playlist";
 
 type SpotifyResolveErrorCode =
   | "invalid_url"
@@ -25,29 +41,118 @@ export class SpotifyResolveError extends Error {
 }
 
 export function isSpotifyInput(input: string): boolean {
-  if (input.indexOf("spotify:") === 0) {
-    return true;
-  }
+  return getSpotifyInputKind(input) !== null;
+}
 
-  try {
-    return new URL(input).hostname === "open.spotify.com";
-  } catch {
-    return false;
-  }
+export function getSpotifyInputKind(input: string): SpotifyInputKind | null {
+  return parseSpotifyInput(input)?.kind ?? null;
 }
 
 export async function resolveSpotifyTrack(input: string): Promise<SpotifyTrackMetadata> {
-  const trackId = parseSpotifyTrackId(input);
+  const parsedInput = parseSpotifyInput(input);
 
-  if (!trackId) {
-    throw new SpotifyResolveError("invalid_url", "Only Spotify track links are supported.");
+  if (!parsedInput) {
+    throw new SpotifyResolveError("invalid_url", "Only Spotify track and playlist links are supported.");
   }
 
+  if (parsedInput.kind !== "track") {
+    throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported here.");
+  }
+
+  const payload = await fetchSpotifyEmbedEntity(parsedInput.kind, parsedInput.id);
+  const metadata = parseSpotifyTrackMetadata(payload, parsedInput.id);
+
+  if (!metadata) {
+    throw new SpotifyResolveError(
+      "invalid_payload",
+      "Spotify returned a track page we could not understand.",
+    );
+  }
+
+  return metadata;
+}
+
+export async function resolveSpotifyPlaylist(input: string): Promise<SpotifyPlaylistMetadata> {
+  const parsedInput = parseSpotifyInput(input);
+
+  if (!parsedInput) {
+    throw new SpotifyResolveError("invalid_url", "Only Spotify track and playlist links are supported.");
+  }
+
+  if (parsedInput.kind !== "playlist") {
+    throw new SpotifyResolveError("unsupported_type", "Only Spotify playlist links are supported here.");
+  }
+
+  const payload = await fetchSpotifyEmbedEntity(parsedInput.kind, parsedInput.id);
+  const metadata = parseSpotifyPlaylistMetadata(payload, parsedInput.id);
+
+  if (!metadata) {
+    throw new SpotifyResolveError(
+      "invalid_payload",
+      "Spotify returned a playlist page we could not understand.",
+    );
+  }
+
+  return metadata;
+}
+
+function parseSpotifyInput(input: string): { kind: SpotifyInputKind; id: string } | null {
+  if (input.indexOf("spotify:") === 0) {
+    const parts = input.split(":");
+
+    if (parts.length === 3 && (parts[1] === "track" || parts[1] === "playlist") && parts[2]) {
+      return { kind: parts[1], id: parts[2] };
+    }
+
+    if (parts.length >= 2) {
+      throw new SpotifyResolveError(
+        "unsupported_type",
+        "Only Spotify track and playlist links are supported.",
+      );
+    }
+
+    return null;
+  }
+
+  try {
+    const url = new URL(input);
+
+    if (url.hostname !== "open.spotify.com") {
+      return null;
+    }
+
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const baseIndex = pathParts[0]?.startsWith("intl-") ? 1 : 0;
+    const kind = pathParts[baseIndex];
+    const id = pathParts[baseIndex + 1];
+
+    if ((kind === "track" || kind === "playlist") && id) {
+      return { kind, id };
+    }
+
+    if (kind) {
+      throw new SpotifyResolveError(
+        "unsupported_type",
+        "Only Spotify track and playlist links are supported.",
+      );
+    }
+
+    return null;
+  } catch (error) {
+    if (error instanceof SpotifyResolveError) {
+      throw error;
+    }
+
+    return null;
+  }
+}
+
+async function fetchSpotifyEmbedEntity(kind: SpotifyInputKind, id: string): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const response = await fetch(`https://open.spotify.com/embed/track/${trackId}`, {
+    const response = await fetch(`https://open.spotify.com/embed/${kind}/${id}`, {
       headers: {
         Accept: "text/html",
       },
@@ -63,16 +168,7 @@ export async function resolveSpotifyTrack(input: string): Promise<SpotifyTrackMe
 
     const html = await response.text();
     const payload = extractNextDataPayload(html);
-    const metadata = parseSpotifyTrackMetadata(payload, trackId);
-
-    if (!metadata) {
-      throw new SpotifyResolveError(
-        "invalid_payload",
-        "Spotify returned a track page we could not understand.",
-      );
-    }
-
-    return metadata;
+    return payload;
   } catch (error) {
     if (error instanceof SpotifyResolveError) {
       throw error;
@@ -80,68 +176,11 @@ export async function resolveSpotifyTrack(input: string): Promise<SpotifyTrackMe
 
     throw new SpotifyResolveError(
       "fetch_failed",
-      error instanceof Error ? error.message : "Failed to fetch Spotify track metadata.",
+      error instanceof Error ? error.message : "Failed to fetch Spotify metadata.",
     );
   } finally {
     clearTimeout(timeout);
   }
-}
-
-function parseSpotifyTrackId(input: string): string | null {
-  if (input.indexOf("spotify:") === 0) {
-    const parts = input.split(":");
-    if (parts.length === 3 && parts[1] === "track" && parts[2]) {
-      return parts[2];
-    }
-
-    if (parts.length >= 2) {
-      throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported.");
-    }
-
-    return null;
-  }
-
-  let url: URL;
-
-  try {
-    url = new URL(input);
-  } catch {
-    return null;
-  }
-
-  if (url.hostname !== "open.spotify.com") {
-    return null;
-  }
-
-  const pathParts = url.pathname.split("/").filter(Boolean);
-
-  if (pathParts.length < 2) {
-    return null;
-  }
-
-  const firstPathPart = pathParts[0];
-
-  if (!firstPathPart) {
-    return null;
-  }
-
-  if (firstPathPart === "track") {
-    return pathParts[1] || null;
-  }
-
-  if (pathParts.length >= 3 && firstPathPart.startsWith("intl-") && pathParts[1] === "track") {
-    return pathParts[2] || null;
-  }
-
-  if (firstPathPart.startsWith("intl-")) {
-    throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported.");
-  }
-
-  if (firstPathPart !== "track") {
-    throw new SpotifyResolveError("unsupported_type", "Only Spotify track links are supported.");
-  }
-
-  return pathParts[1] || null;
 }
 
 function extractNextDataPayload(html: string): unknown {
@@ -151,7 +190,7 @@ function extractNextDataPayload(html: string): unknown {
   const payload = match?.[1];
 
   if (!payload) {
-    throw new SpotifyResolveError("invalid_payload", "Spotify track metadata payload was missing.");
+    throw new SpotifyResolveError("invalid_payload", "Spotify metadata payload was missing.");
   }
 
   return JSON.parse(payload) as unknown;
@@ -182,6 +221,72 @@ function parseSpotifyTrackMetadata(payload: unknown, trackId: string): SpotifyTr
     durationMs,
     thumbnailUrl,
   };
+}
+
+function parseSpotifyPlaylistMetadata(
+  payload: unknown,
+  playlistId: string,
+): SpotifyPlaylistMetadata | null {
+  const entity = getNestedObject(payload, ["props", "pageProps", "state", "data", "entity"]);
+
+  if (!entity) {
+    return null;
+  }
+
+  const title = getString(entity.title) || getString(entity.name);
+  const trackList = entity.trackList;
+
+  if (!title || !Array.isArray(trackList)) {
+    return null;
+  }
+
+  const tracks = trackList
+    .map((track) => parseSpotifyPlaylistTrack(track))
+    .filter((track): track is SpotifyPlaylistTrackMetadata => track !== null);
+
+  return {
+    playlistId,
+    sourceUrl: `https://open.spotify.com/playlist/${playlistId}`,
+    title,
+    tracks,
+  };
+}
+
+function parseSpotifyPlaylistTrack(track: unknown): SpotifyPlaylistTrackMetadata | null {
+  const entity = getObject(track);
+
+  if (!entity) {
+    return null;
+  }
+
+  const uri = getString(entity.uri);
+  const title = getString(entity.title);
+  const artistText = getString(entity.subtitle) || "";
+  const durationMs = getNumber(entity.duration) || 0;
+  const entityType = getString(entity.entityType);
+  const trackId = uri ? getSpotifyIdFromUri(uri, "track") : null;
+
+  if (!title || !trackId || (entityType && entityType !== "track")) {
+    return null;
+  }
+
+  return {
+    trackId,
+    sourceUrl: `https://open.spotify.com/track/${trackId}`,
+    title,
+    artistText,
+    durationMs,
+  };
+}
+
+function getSpotifyIdFromUri(uri: string, kind: SpotifyInputKind): string | null {
+  const parts = uri.split(":");
+
+  if (parts.length === 3 && parts[1] === kind && parts[2]) {
+    return parts[2];
+  }
+
+  return null;
 }
 
 function getArtists(entity: Record<string, unknown>): string[] {
