@@ -26,10 +26,20 @@ service Player {
   rpc GetPlayerStatus (PlayerStatusRequest) returns (PlayerStatusResponse);
 }
 
+enum SongSource {
+  SONG_SOURCE_UNSPECIFIED = 0;
+  SONG_SOURCE_YOUTUBE = 1;
+  SONG_SOURCE_SPOTIFY = 2;
+}
+
 // Request to add a song to the queue
 message AddSongRequest {
-  string url = 1;
+  string playback_url = 1;
   string requester_id = 2;
+  string source_url = 3;
+  string title = 4;
+  string artist_text = 5;
+  SongSource source = 6;
 }
 
 // Response after adding a song
@@ -71,6 +81,10 @@ message QueueStatusRequest {
 message QueueItem {
   string url = 1;
   string requester_id = 2;
+  string playback_url = 3;
+  string title = 4;
+  string artist_text = 5;
+  SongSource source = 6;
 }
 
 // Response with queue status
@@ -79,6 +93,10 @@ message QueueStatusResponse {
   bool is_playing = 2;
   string now_playing_url = 3;
   string now_playing_requester = 4;
+  string now_playing_playback_url = 5;
+  string now_playing_title = 6;
+  string now_playing_artist_text = 7;
+  SongSource now_playing_source = 8;
 }
 
 // Request to pause playback
@@ -124,4 +142,8 @@ message PlayerStatusResponse {
   string requester_id = 3;
   bool has_queue = 4;
   int32 queue_length = 5;
+  string current_playback_url = 6;
+  string current_title = 7;
+  string current_artist_text = 8;
+  SongSource current_source = 9;
 }

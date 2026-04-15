@@ -3,6 +3,11 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { getQueueStatus } from "../grpc/client/player.js";
 import { workerRegistry } from "../k8s.js";
 
+function formatQueueItem(title: string, artistText: string, url: string, requesterId: string): string {
+  const label = title ? `${title}${artistText ? ` - ${artistText}` : ""}` : "Link";
+  return `[${label}](${url}) | Requested by <@${requesterId}>`;
+}
+
 registerInteraction({
   data: new SlashCommandBuilder().setName("queue").setDescription("Show the current music queue"),
   async execute(interaction) {
@@ -23,9 +28,16 @@ registerInteraction({
       const embed = new EmbedBuilder().setTitle("Music Queue").setColor("#0099ff");
 
       if (response.isPlaying && response.nowPlayingUrl) {
+        const nowPlayingLabel = formatQueueItem(
+          response.nowPlayingTitle,
+          response.nowPlayingArtistText,
+          response.nowPlayingUrl,
+          response.nowPlayingRequester,
+        );
+
         embed.addFields({
           name: "🎵 Now Playing",
-          value: `[Link](${response.nowPlayingUrl}) | Requested by <@${response.nowPlayingRequester}>`,
+          value: nowPlayingLabel,
         });
       } else {
         embed.addFields({
@@ -38,7 +50,7 @@ registerInteraction({
         const queueList = response.items
           .map(
             (item, index) =>
-              `${index + 1}. [Link](${item.url}) | Requested by <@${item.requesterId}>`,
+              `${index + 1}. ${formatQueueItem(item.title, item.artistText, item.url, item.requesterId)}`,
           )
           .join("\n");
 

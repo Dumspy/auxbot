@@ -6,10 +6,20 @@ import {
   PlayerStatusResponse,
   QueueStatusResponse,
   ResumeResponse,
+  SongSource,
   SkipResponse,
 } from "@auxbot/protos/player";
 import { captureException } from "@auxbot/sentry";
 import { createGrpcClient } from "./common.js";
+
+interface AddSongInput {
+  playbackUrl: string;
+  requesterId: string;
+  sourceUrl?: string;
+  title?: string;
+  artistText?: string;
+  source?: SongSource;
+}
 
 function createPlayerClient(guildId: string): PlayerClient {
   return createGrpcClient(PlayerClient, guildId);
@@ -17,20 +27,27 @@ function createPlayerClient(guildId: string): PlayerClient {
 
 export async function addSong(
   guildId: string,
-  url: string,
-  requesterId: string,
+  song: AddSongInput,
 ): Promise<AddSongResponse> {
   return new Promise((resolve, reject) => {
     const client = createPlayerClient(guildId);
-    const request = { url, requesterId };
+    const request = {
+      playbackUrl: song.playbackUrl,
+      requesterId: song.requesterId,
+      sourceUrl: song.sourceUrl || song.playbackUrl,
+      title: song.title || "",
+      artistText: song.artistText || "",
+      source: song.source ?? SongSource.SONG_SOURCE_UNSPECIFIED,
+    };
 
     client.addSong(request, (error, response) => {
       if (error) {
         captureException(error, {
           tags: {
             guildId,
-            url,
-            requesterId,
+            playbackUrl: request.playbackUrl,
+            sourceUrl: request.sourceUrl,
+            requesterId: request.requesterId,
           },
         });
         reject(error);
