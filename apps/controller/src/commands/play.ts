@@ -13,17 +13,21 @@ import {
   type ButtonInteraction,
 } from "discord.js";
 import { addSong } from "../grpc/client/player.js";
-import { searchYouTube } from "../grpc/client/search.js";
+import { resolveYouTubePlaylist, searchYouTube } from "../grpc/client/search.js";
 import { workerRegistry } from "../k8s.js";
 import {
+  getSpotifyInputKind,
+  type SpotifyPlaylistMetadata,
   SpotifyResolveError,
-  isSpotifyInput,
+  resolveSpotifyPlaylist,
+  type SpotifyBaseTrackMetadata,
   resolveSpotifyTrack,
   type SpotifyTrackMetadata,
 } from "../services/spotify.js";
-import { formatDuration, isYouTubeUrl } from "../utils/youtube.js";
+import { formatDuration, getYouTubeInputKind } from "../utils/youtube.js";
 
 const PAGE_SIZE = 5;
+const PLAYLIST_BATCH_SIZE = 10;
 const INTERACTION_TIMEOUT_MS = 30_000;
 const FILTERED_TERMS = ["live", "karaoke", "instrumental", "cover", "remix", "nightcore"];
 
@@ -47,6 +51,13 @@ interface SearchState {
   selectedSongMetadata?: SelectedSongMetadata;
 }
 
+interface PlaylistImportCounts {
+  processed: number;
+  queued: number;
+  skipped: number;
+  startedPlaying: boolean;
+}
+
 function createSuccessEmbed(isPlaying: boolean, title: string, artistText?: string): EmbedBuilder {
   const description = artistText ? `${title} - ${artistText}` : title;
 
@@ -54,6 +65,51 @@ function createSuccessEmbed(isPlaying: boolean, title: string, artistText?: stri
     .setTitle(isPlaying ? "Now Playing" : "Added to Queue")
     .setDescription(description)
     .setColor(isPlaying ? "#00ff00" : "#ffff00");
+}
+
+function createPlaylistStatusEmbed(
+  sourceLabel: string,
+  playlistTitle: string,
+  counts: PlaylistImportCounts,
+  status: "progress" | "complete" | "empty",
+  totalCount?: number,
+): EmbedBuilder {
+  const embed = new EmbedBuilder()
+    .setTitle(
+      status === "progress"
+        ? `Importing ${sourceLabel} Playlist`
+        : status === "empty"
+          ? `No Playable ${sourceLabel} Tracks Found`
+          : `Imported ${sourceLabel} Playlist`,
+    )
+    .setColor(status === "empty" ? "#ff0000" : status === "progress" ? "#0099ff" : "#00ff00")
+    .addFields(
+      {
+        name: "Playlist",
+        value: playlistTitle,
+      },
+      {
+        name: "Processed",
+        value: totalCount != null ? `${counts.processed}/${totalCount}` : `${counts.processed}`,
+        inline: true,
+      },
+      {
+        name: "Queued",
+        value: `${counts.queued}`,
+        inline: true,
+      },
+      {
+        name: "Skipped",
+        value: `${counts.skipped}`,
+        inline: true,
+      },
+    );
+
+  if (counts.startedPlaying && status !== "progress") {
+    embed.setFooter({ text: "The first queued track started playing immediately." });
+  }
+
+  return embed;
 }
 
 function normalizeText(value: string): string {
@@ -69,12 +125,12 @@ function getTokens(value: string): string[] {
     .filter((token) => token.length > 1);
 }
 
-function buildSpotifySearchQuery(track: SpotifyTrackMetadata): string {
-  return `${track.artistText} - ${track.title} audio`;
+function buildSpotifySearchQuery(track: SpotifyBaseTrackMetadata): string {
+  return `${track.artistText} ${track.title} audio`.trim();
 }
 
 function scoreSearchResult(
-  track: SpotifyTrackMetadata,
+  track: SpotifyBaseTrackMetadata,
   result: SearchYouTubeResponse["results"][number],
 ): number {
   const normalizedResultTitle = normalizeText(result.title);
@@ -126,7 +182,7 @@ function scoreSearchResult(
 }
 
 function findConfidentSpotifyMatch(
-  track: SpotifyTrackMetadata,
+  track: SpotifyBaseTrackMetadata,
   results: SearchYouTubeResponse["results"],
 ): SearchYouTubeResponse["results"][number] | null {
   const scoredResults = results
@@ -387,7 +443,235 @@ async function updateSearchResults(state: SearchState): Promise<void> {
   }
 }
 
-async function handleSpotifySong(
+async function handleYouTubePlaylist(
+  interaction: ChatInputCommandInteraction,
+  playlistUrl: string,
+): Promise<void> {
+  const counts: PlaylistImportCounts = {
+    processed: 0,
+    queued: 0,
+    skipped: 0,
+    startedPlaying: false,
+  };
+  let offset = 0;
+  let playlistTitle = "YouTube Playlist";
+
+  try {
+    while (true) {
+      const response = await resolveYouTubePlaylist(
+        interaction.guildId!,
+        playlistUrl,
+        offset,
+        PLAYLIST_BATCH_SIZE,
+      );
+
+      if (response.title) {
+        playlistTitle = response.title;
+      }
+
+      if (response.items.length === 0 && counts.processed === 0) {
+        await interaction.editReply({
+          embeds: [createPlaylistStatusEmbed("YouTube", playlistTitle, counts, "empty")],
+        });
+        return;
+      }
+
+      for (const item of response.items) {
+        counts.processed++;
+
+        try {
+          const addSongResponse = await addSong(
+            interaction.guildId!,
+            buildSongPayload(interaction.user.id, item),
+          );
+          counts.queued++;
+          counts.startedPlaying ||= addSongResponse.isPlaying;
+        } catch (error) {
+          counts.skipped++;
+          captureException(error, {
+            tags: {
+              guildId: interaction.guildId,
+              userId: interaction.user.id,
+              url: item.url,
+              action: "add_youtube_playlist_item",
+            },
+          });
+        }
+      }
+
+      await interaction.editReply({
+        embeds: [createPlaylistStatusEmbed("YouTube", playlistTitle, counts, "progress")],
+      });
+
+      if (!response.hasMore) {
+        break;
+      }
+
+      offset += PLAYLIST_BATCH_SIZE;
+    }
+
+    await interaction.editReply({
+      embeds: [
+        createPlaylistStatusEmbed(
+          "YouTube",
+          playlistTitle,
+          counts,
+          counts.queued > 0 ? "complete" : "empty",
+        ),
+      ],
+    });
+  } catch (error) {
+    captureException(error, {
+      tags: {
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        url: playlistUrl,
+        action: "resolve_youtube_playlist",
+      },
+    });
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Failed to import YouTube playlist")
+          .setDescription("Please try again later.")
+          .setColor("#ff0000"),
+      ],
+    });
+  }
+}
+
+async function handleSpotifyPlaylist(
+  interaction: ChatInputCommandInteraction,
+  songInput: string,
+): Promise<void> {
+  let playlist: SpotifyPlaylistMetadata;
+
+  try {
+    playlist = await resolveSpotifyPlaylist(songInput);
+  } catch (error) {
+    if (error instanceof SpotifyResolveError) {
+      if (error.code === "fetch_failed" || error.code === "invalid_payload") {
+        captureException(error, {
+          tags: {
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            url: songInput,
+            action: "resolve_spotify_playlist",
+          },
+        });
+      }
+
+      const title =
+        error.code === "unsupported_type"
+          ? "Unsupported Spotify link"
+          : "Failed to resolve Spotify playlist";
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder().setTitle(title).setDescription(error.message).setColor("#ff0000"),
+        ],
+      });
+      return;
+    }
+
+    captureException(error, {
+      tags: {
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        url: songInput,
+        action: "resolve_spotify_playlist",
+      },
+    });
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Failed to resolve Spotify playlist")
+          .setDescription("Please try again later.")
+          .setColor("#ff0000"),
+      ],
+    });
+    return;
+  }
+
+  const counts: PlaylistImportCounts = {
+    processed: 0,
+    queued: 0,
+    skipped: 0,
+    startedPlaying: false,
+  };
+
+  if (playlist.tracks.length === 0) {
+    await interaction.editReply({
+      embeds: [createPlaylistStatusEmbed("Spotify", playlist.title, counts, "empty", 0)],
+    });
+    return;
+  }
+
+  for (let start = 0; start < playlist.tracks.length; start += PLAYLIST_BATCH_SIZE) {
+    const batch = playlist.tracks.slice(start, start + PLAYLIST_BATCH_SIZE);
+
+    for (const track of batch) {
+      counts.processed++;
+
+      try {
+        const query = buildSpotifySearchQuery(track);
+        const response = await searchYouTube(interaction.guildId!, query, 0, PAGE_SIZE);
+        const matchedResult = findConfidentSpotifyMatch(track, response.results);
+
+        if (!matchedResult) {
+          counts.skipped++;
+          continue;
+        }
+
+        const song = buildSongPayload(interaction.user.id, matchedResult, {
+          sourceUrl: track.sourceUrl || playlist.sourceUrl,
+          title: track.title,
+          artistText: track.artistText,
+          source: SongSource.SONG_SOURCE_SPOTIFY,
+        });
+        const addSongResponse = await addSong(interaction.guildId!, song);
+
+        counts.queued++;
+        counts.startedPlaying ||= addSongResponse.isPlaying;
+      } catch (error) {
+        counts.skipped++;
+        captureException(error, {
+          tags: {
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            title: track.title,
+            action: "import_spotify_playlist_track",
+          },
+        });
+      }
+    }
+
+    await interaction.editReply({
+      embeds: [
+        createPlaylistStatusEmbed(
+          "Spotify",
+          playlist.title,
+          counts,
+          "progress",
+          playlist.tracks.length,
+        ),
+      ],
+    });
+  }
+
+  await interaction.editReply({
+    embeds: [
+      createPlaylistStatusEmbed(
+        "Spotify",
+        playlist.title,
+        counts,
+        counts.queued > 0 ? "complete" : "empty",
+        playlist.tracks.length,
+      ),
+    ],
+  });
+}
+
+async function handleSpotifyTrack(
   interaction: ChatInputCommandInteraction,
   songInput: string,
 ): Promise<void> {
@@ -516,11 +800,11 @@ async function handleSpotifySong(
 registerInteraction({
   data: new SlashCommandBuilder()
     .setName("play")
-    .setDescription("Play a song")
+    .setDescription("Play a song or playlist")
     .addStringOption((option) =>
       option
         .setName("song")
-        .setDescription("The URL of song to play or search query")
+        .setDescription("The URL of a song or playlist to play, or a search query")
         .setRequired(true),
     ) as SlashCommandBuilder,
   async execute(interaction) {
@@ -539,7 +823,14 @@ registerInteraction({
 
     await interaction.deferReply();
 
-    if (isYouTubeUrl(songInput)) {
+    const youTubeInputKind = getYouTubeInputKind(songInput);
+
+    if (youTubeInputKind === "playlist") {
+      await handleYouTubePlaylist(interaction, songInput);
+      return;
+    }
+
+    if (youTubeInputKind === "video") {
       try {
         const response = await addSong(interaction.guildId, {
           playbackUrl: songInput,
@@ -562,8 +853,15 @@ registerInteraction({
       return;
     }
 
-    if (isSpotifyInput(songInput)) {
-      await handleSpotifySong(interaction, songInput);
+    const spotifyInputKind = getSpotifyInputKind(songInput);
+
+    if (spotifyInputKind === "track") {
+      await handleSpotifyTrack(interaction, songInput);
+      return;
+    }
+
+    if (spotifyInputKind === "playlist") {
+      await handleSpotifyPlaylist(interaction, songInput);
       return;
     }
 

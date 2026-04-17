@@ -4,6 +4,7 @@ package search;
 
 service Search {
   rpc SearchYouTube (SearchYouTubeRequest) returns (SearchYouTubeResponse);
+  rpc ResolveYouTubePlaylist (ResolveYouTubePlaylistRequest) returns (ResolveYouTubePlaylistResponse);
 }
 
 message SearchYouTubeRequest {
@@ -25,4 +26,16 @@ message SearchResult {
 message SearchYouTubeResponse {
   repeated SearchResult results = 1;
   bool has_more = 2;
+}
+
+message ResolveYouTubePlaylistRequest {
+  string url = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message ResolveYouTubePlaylistResponse {
+  string title = 1;
+  repeated SearchResult items = 2;
+  bool has_more = 3;
 }
