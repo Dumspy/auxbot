@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.3",
-    "protobufjs": "^7.5.0"
+    "protobufjs": "^7.5.5"
   },
   "devDependencies": {
     "@auxbot/typescript-config": "workspace:*",
