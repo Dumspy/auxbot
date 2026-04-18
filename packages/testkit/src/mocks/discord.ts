@@ -1,4 +1,4 @@
-import { vi, type Mock } from 'vitest';
+import { vi, type Mock } from "vitest";
 
 export interface MockDiscord {
   getClient: Mock;
@@ -8,7 +8,7 @@ export interface MockDiscord {
 
 export function createMockDiscord(): MockDiscord {
   const mockClient = {
-    login: vi.fn().mockResolvedValue('token'),
+    login: vi.fn().mockResolvedValue("token"),
     destroy: vi.fn(),
     on: vi.fn(),
     once: vi.fn(),
@@ -18,8 +18,8 @@ export function createMockDiscord(): MockDiscord {
       },
     },
     user: {
-      id: '123456789',
-      tag: 'Bot#1234',
+      id: "123456789",
+      tag: "Bot#1234",
     },
   };
 

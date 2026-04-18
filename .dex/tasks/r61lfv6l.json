@@ -11,8 +11,6 @@
   "updated_at": "2026-01-27T22:03:02.396Z",
   "completed_at": "2026-01-27T21:19:08.466Z",
   "blockedBy": [],
-  "blocks": [
-    "tue34p2y"
-  ],
+  "blocks": ["tue34p2y"],
   "children": []
 }

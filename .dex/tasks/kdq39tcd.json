@@ -11,8 +11,6 @@
   "updated_at": "2026-01-27T22:03:03.457Z",
   "completed_at": "2026-01-27T21:24:25.688Z",
   "blockedBy": [],
-  "blocks": [
-    "ne26dcs5"
-  ],
+  "blocks": ["ne26dcs5"],
   "children": []
 }

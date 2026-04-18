@@ -21,7 +21,7 @@ import { captureException } from "@auxbot/sentry";
 export interface PlayerDeps {
   createAudioPlayer: () => AudioPlayer;
   getVoiceConnection: () => VoiceConnection | null;
-  spawn: (command: string, args: readonly string[]) => import('node:child_process').ChildProcess;
+  spawn: (command: string, args: readonly string[]) => import("node:child_process").ChildProcess;
   processExit: (code: number) => never;
 }
 

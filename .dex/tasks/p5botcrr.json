@@ -12,10 +12,5 @@
   "completed_at": "2026-01-28T17:27:23.701Z",
   "blockedBy": [],
   "blocks": [],
-  "children": [
-    "mv6q28gu",
-    "biap65k2",
-    "at3kcwf2",
-    "uqmxnao4"
-  ]
+  "children": ["mv6q28gu", "biap65k2", "at3kcwf2", "uqmxnao4"]
 }

@@ -6,7 +6,7 @@ export async function flushPromises(): Promise<void> {
 
 export function waitFor<T>(
   condition: () => T | undefined,
-  options: { timeout?: number; interval?: number } = {}
+  options: { timeout?: number; interval?: number } = {},
 ): Promise<T> {
   const { timeout = 5000, interval = 100 } = options;
   const startTime = Date.now();

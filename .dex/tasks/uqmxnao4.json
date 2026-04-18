@@ -10,10 +10,7 @@
   "created_at": "2026-01-26T22:23:01.331Z",
   "updated_at": "2026-01-27T22:03:03.281Z",
   "completed_at": "2026-01-27T21:09:27.264Z",
-  "blockedBy": [
-    "mv6q28gu",
-    "at3kcwf2"
-  ],
+  "blockedBy": ["mv6q28gu", "at3kcwf2"],
   "blocks": [],
   "children": []
 }

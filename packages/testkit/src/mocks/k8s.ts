@@ -1,15 +1,17 @@
-import type { CoreV1Api, V1Service } from '@kubernetes/client-node';
-import { V1Pod, V1ServiceList } from '@kubernetes/client-node';
-import { vi } from 'vitest';
+import type { CoreV1Api, V1Service } from "@kubernetes/client-node";
+import { V1Pod, V1ServiceList } from "@kubernetes/client-node";
+import { vi } from "vitest";
 
 export function createMockCoreV1Api(): CoreV1Api {
   return {
-    createNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: 'test-pod' } } }),
+    createNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: "test-pod" } } }),
     deleteNamespacedPod: vi.fn().mockResolvedValue({ body: {} }),
     listNamespacedPod: vi.fn().mockResolvedValue({ body: { items: [] } }),
-    readNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: 'test-pod' } } }),
+    readNamespacedPod: vi.fn().mockResolvedValue({ body: { metadata: { name: "test-pod" } } }),
     patchNamespacedPod: vi.fn().mockResolvedValue({ body: {} }),
-    createNamespacedService: vi.fn().mockResolvedValue({ body: { metadata: { name: 'test-service' } } }),
+    createNamespacedService: vi
+      .fn()
+      .mockResolvedValue({ body: { metadata: { name: "test-service" } } }),
     deleteNamespacedService: vi.fn().mockResolvedValue({ body: {} }),
     listNamespacedService: vi.fn().mockResolvedValue({ body: { items: [] } }),
   } as unknown as CoreV1Api;
@@ -22,9 +24,9 @@ export function createMockPod(name: string, uid?: string): V1Pod {
 }
 
 export function createMockService(name: string, guildId?: string): V1Service {
-  const metadata: import('@kubernetes/client-node').V1ObjectMeta = { name };
+  const metadata: import("@kubernetes/client-node").V1ObjectMeta = { name };
   if (guildId) {
-    metadata.labels = { 'discord-guild-id': guildId };
+    metadata.labels = { "discord-guild-id": guildId };
   }
   return { metadata } as V1Service;
 }
@@ -47,7 +49,7 @@ export function resetCoreV1Api(): void {
 
 export function getMockCoreV1Api(): CoreV1Api {
   if (!mockCoreV1Api) {
-    throw new Error('Mock CoreV1Api not set. Call setCoreV1Api() first.');
+    throw new Error("Mock CoreV1Api not set. Call setCoreV1Api() first.");
   }
   return mockCoreV1Api;
 }

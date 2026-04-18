@@ -3,12 +3,14 @@
 ## File Naming and Layout
 
 ### Test Files
+
 - Tests are `*.test.ts` files
 - Two locations:
   - **Colocated tests**: Place next to modules under `src/` (preferred for single-module tests)
   - **Larger test suites**: Place in `test/` directory (for multi-module or integration tests)
 
 ### Directory Structure
+
 ```
 apps/
   controller/
@@ -33,6 +35,7 @@ packages/
 ## Commands
 
 ### Root Commands
+
 ```bash
 # Run all tests
 pnpm test
@@ -42,6 +45,7 @@ pnpm test:watch
 ```
 
 ### Filtered Commands
+
 ```bash
 # Run tests for a specific package
 pnpm --filter @auxbot/controller test
@@ -55,10 +59,11 @@ pnpm --filter @auxbot/worker test:watch
 ## Mocking Recipes
 
 ### Fake Timers
+
 Use Vitest's fake timers for tests involving `setTimeout`, `setInterval`, etc.
 
 ```typescript
-import { beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, vi } from "vitest";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -68,9 +73,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it('should handle inactivity timeout', () => {
+it("should handle inactivity timeout", () => {
   // Set system time
-  vi.setSystemTime(new Date('2024-01-01').getTime());
+  vi.setSystemTime(new Date("2024-01-01").getTime());
 
   // Advance time to trigger timeout
   vi.advanceTimersByTime(5 * 60 * 1000);
@@ -80,14 +85,15 @@ it('should handle inactivity timeout', () => {
 ```
 
 ### K8s API Mocking
+
 K8s clients are injectable via `getCoreV1Api()` and `setCoreV1Api()` functions.
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { setCoreV1Api, resetCoreV1Api, createMockCoreV1Api } from '@auxbot/testkit';
-import type { CoreV1Api } from '@kubernetes/client-node';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { setCoreV1Api, resetCoreV1Api, createMockCoreV1Api } from "@auxbot/testkit";
+import type { CoreV1Api } from "@kubernetes/client-node";
 
-describe('WorkerRegistry', () => {
+describe("WorkerRegistry", () => {
   let mockK8sApi: CoreV1Api;
 
   beforeEach(() => {
@@ -100,12 +106,12 @@ describe('WorkerRegistry', () => {
     vi.clearAllMocks();
   });
 
-  it('should register a new worker', async () => {
+  it("should register a new worker", async () => {
     const pod = {
-      metadata: { name: 'worker-123' },
+      metadata: { name: "worker-123" },
     } as V1Pod;
 
-    await registry.registerWorker(pod, 'guild1', 'channel1');
+    await registry.registerWorker(pod, "guild1", "channel1");
 
     expect(mockK8sApi.createNamespacedPod).toHaveBeenCalled();
   });
@@ -113,13 +119,14 @@ describe('WorkerRegistry', () => {
 ```
 
 ### gRPC Client Mocking
+
 Use testkit factory functions with setter + reset pattern for gRPC clients.
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getMockPlayerClient, setMockPlayerClient, resetMockPlayerClient } from '@auxbot/testkit';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { getMockPlayerClient, setMockPlayerClient, resetMockPlayerClient } from "@auxbot/testkit";
 
-describe('Player', () => {
+describe("Player", () => {
   beforeEach(() => {
     setMockPlayerClient();
   });
@@ -129,42 +136,43 @@ describe('Player', () => {
     vi.clearAllMocks();
   });
 
-  it('should call gRPC client', async () => {
+  it("should call gRPC client", async () => {
     const mockClient = getMockPlayerClient();
 
-    await player.addSong('https://example.com/song', 'user1');
+    await player.addSong("https://example.com/song", "user1");
 
     expect(mockClient.addSong).toHaveBeenCalledWith({
-      url: 'https://example.com/song',
-      requesterId: 'user1',
+      url: "https://example.com/song",
+      requesterId: "user1",
     });
   });
 });
 ```
 
 ### Node Builtins Mocking
+
 Use `vi.mock()` with `node:` prefix for ESM compatibility.
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 
 // Mock child_process
-vi.mock('node:child_process', () => ({
+vi.mock("node:child_process", () => ({
   spawn: vi.fn(),
 }));
 
 // Mock fs/promises
-vi.mock('node:fs/promises', () => ({
+vi.mock("node:fs/promises", () => ({
   unlink: vi.fn(),
 }));
 
-import { spawn } from 'node:child_process';
-import { unlink } from 'node:fs/promises';
+import { spawn } from "node:child_process";
+import { unlink } from "node:fs/promises";
 
-describe('Player', () => {
-  it('should spawn yt-dlp process', () => {
+describe("Player", () => {
+  it("should spawn yt-dlp process", () => {
     // Use the mocked spawn function
-    spawn('yt-dlp', ['url']);
+    spawn("yt-dlp", ["url"]);
   });
 });
 ```
@@ -178,16 +186,20 @@ To add new mocks to `packages/testkit`:
    - Return appropriate mock values with `mockResolvedValue()` or `mockReturnValue()`
 
 2. **Export from index**: Add to `packages/testkit/src/index.ts`
+
    ```typescript
-   export * from './mocks/<name>.js';
+   export * from "./mocks/<name>.js";
    ```
 
 3. **If using singleton pattern**: Add getter, setter, and reset functions
+
    ```typescript
    let mockInstance: ReturnType<typeof createMock> | null = null;
 
    export function createMock() {
-     return { /* mock implementation */ };
+     return {
+       /* mock implementation */
+     };
    }
 
    export function getMock() {
@@ -214,8 +226,8 @@ Example: Creating a mock for a new API client
 
 ```typescript
 // packages/testkit/src/mocks/new-client.ts
-import { vi } from 'vitest';
-import type { NewClient } from 'new-library';
+import { vi } from "vitest";
+import type { NewClient } from "new-library";
 
 export function createMockNewClient(): NewClient {
   return {
@@ -225,12 +237,13 @@ export function createMockNewClient(): NewClient {
 }
 
 // packages/testkit/src/index.ts
-export * from './mocks/new-client.js';
+export * from "./mocks/new-client.js";
 ```
 
 ## Test Organization
 
 ### Colocated Tests (Preferred)
+
 Place tests next to the code they test:
 
 ```
@@ -242,6 +255,7 @@ src/
 ```
 
 ### Test Suite (Larger Scenarios)
+
 Place multi-module or integration tests in `test/`:
 
 ```
@@ -253,6 +267,7 @@ test/
 ## Running Tests
 
 ### All Tests
+
 ```bash
 pnpm test
 ```
@@ -260,12 +275,14 @@ pnpm test
 Runs all tests across all packages/apps via Turborepo.
 
 ### Single Package
+
 ```bash
 pnpm --filter @auxbot/controller test
 pnpm --filter @auxbot/worker test
 ```
 
 ### Watch Mode
+
 ```bash
 # Watch all packages
 pnpm test:watch
