@@ -3,10 +3,10 @@ import { generateText } from "ai";
 import { captureException } from "@auxbot/sentry";
 import { env } from "../env.js";
 
-const zhipu = createOpenAICompatible({
-  baseURL: "https://api.z.ai/api/coding/paas/v4",
-  name: "zhipu",
-  apiKey: env.ZHIPU_API_KEY,
+const opencode = createOpenAICompatible({
+  baseURL: "https://opencode.ai/zen/go/v1/chat/completions",
+  name: "opencode-go",
+  apiKey: env.OPENCODE_API_KEY,
 });
 
 export async function generateSummary(messages: string): Promise<string> {
@@ -24,7 +24,7 @@ export async function generateSummary(messages: string): Promise<string> {
   console.log("[AI] Starting generateSummary", {
     messageCount,
     promptLength,
-    model: env.ZHIPU_MODEL,
+    model: env.OPENCODE_MODEL,
   });
 
   try {
@@ -39,7 +39,7 @@ export async function generateSummary(messages: string): Promise<string> {
     }, 30000);
 
     const result = await generateText({
-      model: zhipu(env.ZHIPU_MODEL),
+      model: opencode(env.OPENCODE_MODEL),
       system: systemPrompt,
       prompt: userPrompt,
       abortSignal: controller.signal,
