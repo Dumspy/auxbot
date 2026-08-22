@@ -25,14 +25,14 @@
     "generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated ./*.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,importSuffix=.js"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.13.3",
-    "protobufjs": "^7.5.5"
+    "@grpc/grpc-js": "^1.14.4",
+    "protobufjs": "^7.6.5"
   },
   "devDependencies": {
     "@auxbot/typescript-config": "workspace:*",
-    "@types/node": "^20.11.0",
-    "ts-proto": "^1.167.1",
-    "tsx": "^4.7.0",
-    "typescript": "^5.8.2"
+    "@types/node": "^20.19.43",
+    "ts-proto": "^1.181.2",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
   }
 }

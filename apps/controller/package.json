@@ -10,24 +10,24 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^2.0.18",
+    "@ai-sdk/openai-compatible": "^2.0.70",
     "@auxbot/discord": "workspace:*",
     "@auxbot/protos": "workspace:^",
     "@auxbot/sentry": "workspace:*",
-    "@grpc/grpc-js": "^1.13.3",
+    "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.15",
     "@kubernetes/client-node": "^1.4.0",
     "@t3-oss/env-core": "^0.12.0",
-    "ai": "^6.0.48",
-    "discord.js": "^14.25.1",
-    "express": "^5.0.0",
+    "ai": "^6.0.264",
+    "discord.js": "^14.27.0",
+    "express": "^5.2.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@auxbot/typescript-config": "workspace:*",
-    "@types/express": "^5.0.0",
-    "@types/node": "^20.11.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.8.2"
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
   }
 }
