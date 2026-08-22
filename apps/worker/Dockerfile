@@ -11,6 +11,9 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 # Set working directory
 WORKDIR /app
+# Provide package.json (with pinned packageManager) before pnpm is used,
+# otherwise corepack falls back to the latest pnpm which may not be compatible
+COPY package.json pnpm-workspace.yaml ./
 RUN pnpm install -g turbo
 COPY . .
 RUN turbo prune @auxbot/worker --docker
@@ -18,7 +21,8 @@ RUN turbo prune @auxbot/worker --docker
 # Install dependencies
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat protobuf
+# python3/make/g++ for compiling native deps (e.g. @discordjs/opus) from source
+RUN apk add --no-cache libc6-compat protobuf python3 make g++
 WORKDIR /app
 
 # First install dependencies (as they change less often)
