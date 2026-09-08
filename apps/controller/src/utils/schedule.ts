@@ -23,12 +23,84 @@ export function isValidTimezone(timezone: string): boolean {
   }
 }
 
+const DURATION_UNIT_MS: Record<string, number> = {
+  s: 1000,
+  sec: 1000,
+  secs: 1000,
+  second: 1000,
+  seconds: 1000,
+  m: 60000,
+  min: 60000,
+  mins: 60000,
+  minute: 60000,
+  minutes: 60000,
+  h: 3600000,
+  hour: 3600000,
+  hours: 3600000,
+  d: 86400000,
+  day: 86400000,
+  days: 86400000,
+  w: 604800000,
+  week: 604800000,
+  weeks: 604800000,
+};
+
+export function parseDurationMs(text: string): number | null {
+  let rest = text.trim().toLowerCase();
+  const inMatch = rest.match(/^in\s+(.+)$/);
+
+  if (inMatch?.[1]) {
+    rest = inMatch[1].trim();
+  }
+
+  if (rest.length === 0) {
+    return null;
+  }
+
+  const compact = rest.replace(/\s+/g, "");
+  const tokenRe = /(\d+|an?)(seconds?|secs?|minutes?|mins?|hours?|days?|weeks?|s|m|h|d|w)/g;
+  let total = 0;
+  let covered = "";
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenRe.exec(compact)) !== null) {
+    const amountStr = match[1];
+    const unitStr = match[2];
+
+    if (amountStr === undefined || unitStr === undefined) {
+      return null;
+    }
+
+    const amount = amountStr === "a" || amountStr === "an" ? 1 : Number(amountStr);
+    const unitMs = DURATION_UNIT_MS[unitStr];
+
+    if (!isFinite(amount) || unitMs === undefined) {
+      return null;
+    }
+
+    covered += match[0];
+    total += amount * unitMs;
+  }
+
+  if (covered !== compact || total <= 0) {
+    return null;
+  }
+
+  return total;
+}
+
 export function parseReminderTime(when: string, timezone: string, repeat: Repeat): number {
   if (!isValidTimezone(timezone)) {
     throw new ScheduleParseError("bad_timezone", `Unknown timezone "${timezone}".`);
   }
 
   const nowMs = Date.now();
+  const durationMs = parseDurationMs(when);
+
+  if (durationMs !== null) {
+    return nowMs + durationMs;
+  }
+
   const results = chrono.parse(when, new Date(nowMs), { forwardDate: true });
   const first = results[0];
 
