@@ -1,6 +1,7 @@
 import { initSentry, captureException } from "@auxbot/sentry";
 import { initApp } from "./express.js";
-import { initClient } from "./discord.js";
+import { getDiscordClient, initClient } from "./discord.js";
+import { startReminderPoller } from "./jobs/reminder-poller.js";
 import { workerRegistry } from "./k8s.js";
 import { initGrpc } from "./grpc/index.js";
 
@@ -16,6 +17,9 @@ async function boot() {
 
     await initClient();
     console.log("Discord client initialized");
+
+    startReminderPoller(getDiscordClient());
+    console.log("Reminder poller started");
 
     await initGrpc();
     console.log("gRPC server initialized");

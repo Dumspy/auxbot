@@ -33,6 +33,10 @@ async function registerCommands() {
   });
 }
 
+export function getDiscordClient(): Client {
+  return client;
+}
+
 export function initClient() {
   return new Promise<void>((resolve, reject) => {
     const InitializeTimeout = setTimeout(() => {
