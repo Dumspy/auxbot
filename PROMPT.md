@@ -1,5 +1,4 @@
 study specs/README.md
-study specs/summary-feature-review-feedback.md and pick the most important task(tasks are the individual items under phases with a checkboxes) to work on
 study progress.txt
 
 Format for commit messages:

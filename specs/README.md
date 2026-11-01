@@ -2,12 +2,6 @@
 
 Design documentation for Auxbot, a microservices-based Discord bot built with TypeScript and Kubernetes.
 
-## Discord Bot Commands
-
-| Spec                                       | Code                                      | Purpose                                         |
-| ------------------------------------------ | ----------------------------------------- | ----------------------------------------------- |
-| [summary-feature.md](./summary-feature.md) | `apps/controller/src/commands/summary.ts` | AI-powered message summarization using Zhipu AI |
-
 ## Architecture
 
 | Spec | Code               | Purpose                                    |
