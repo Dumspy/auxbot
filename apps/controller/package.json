@@ -22,7 +22,7 @@
     "express": "^5.2.1",
     "ioredis": "6.0.0",
     "luxon": "3.7.2",
-    "zod": "^3.25.76"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@auxbot/typescript-config": "workspace:*",
